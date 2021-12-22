@@ -1,19 +1,37 @@
 #include "Lex.h"
 
 const std::vector<std::string> Lex::_keywordsList = {
-
+  "if",
+  "for",
+  "while",
+  "this"
 };
 
 const std::vector<std::string> Lex::_typesList = {
-
+  "int",
+  "dounble",
+  "banana",
+  "monkey"
 };
 
 const std::vector<std::string> Lex::_operatorsList = {
-
+  "*",
+  "**",
+  "/",
+  "-",
+  "+",
+  "++",
+  "--"
 };
 
 const std::vector<std::string> Lex::_punctuationList = {
-
+  ";",
+  ":", 
+  "{", 
+  "}", 
+  "(", 
+  ")" ,
+  "=>" 
 };
 
 const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {
