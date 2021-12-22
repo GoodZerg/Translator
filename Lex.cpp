@@ -18,11 +18,11 @@ const std::vector<std::string> Lex::_punctuationList = {
 
 const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {
    {Type::KEYWORD,     Lex::_MakeRegexTemplateByList(Lex::_keywordsList)},
-   {Type::ID,          "////////////////"},  // put id regex - template
+   {Type::ID,          "(_*[a-zA-Z][_a-zA-Z0-9]*)"},  // put id regex - template
    {Type::TYPE,        Lex::_MakeRegexTemplateByList(Lex::_typesList)},
    {Type::OPERATOR,    Lex::_MakeRegexTemplateByList(Lex::_operatorsList)},
-   {Type::NUMBER,      "////////////////"}, // put number regex - template
-   {Type::LITERAL,     "////////////////"}, // put literal regex - template
+   {Type::NUMBER,      "([0-9]+\.[0-9]+|[0-9]+)"}, // put number regex - template
+   {Type::LITERAL,     "(\"([^\"])*\")"}, // put literal regex - template
    {Type::PUNKTUATION, Lex::_MakeRegexTemplateByList(Lex::_punctuationList)}
 };
 

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <regex>
 
 enum class Type {
 	KEYWORD,
