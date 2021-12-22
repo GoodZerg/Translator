@@ -2,5 +2,5 @@
 
 int main() {
   
-	std::cout << "\\\\.";
+	Lex* lex = new Lex();
 }

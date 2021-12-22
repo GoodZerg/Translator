@@ -13,7 +13,8 @@ enum class Type {
 	OPERATOR,
 	NUMBER,
 	LITERAL,
-	PUNKTUATION
+	PUNKTUATION,
+	UNEXPECTED
 };
 
 struct Token {
@@ -35,7 +36,8 @@ private:
 	std::vector<Token*>::iterator _nowToken = _tokens.begin();
 
 	std::fstream _file;
-	std::string _filePath = " ";
+	std::string _filePath = "D:\\Translator\\code.txt";
+	std::string _fullRegex = "";
 
 	struct _TypesTemplates {
 		Type _type;
