@@ -48,12 +48,25 @@ const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {
    {Type::UNEXPECTED,  R"(.)"}
 };
 
-Lex::Lex() {
+Lex::Lex(char * input) {
   for (int i = 0; i < _typeTemplates.size(); ++i) {
     _fullRegex += "(" + _typeTemplates[i]._template + ")" + (i == _typeTemplates.size() - 1 ? "" : "|");
   }
   //std::cout << _fullRegex;
-  _file.open(_filePath);
+  if (input == 0) {
+      std::cout << "NO FILE";
+      exit(0);
+  }
+  std::string tmp = "";
+  while (*input != 0) {
+      tmp += *input;
+      ++input;
+  }
+  _file.open(_filePath + tmp);
+  if (!_file.is_open()) {
+      std::cout << "CRINGE FILE DRUJE";
+      exit(0);
+  }
   std::string line = " ";
   while (!_file.eof()) {
     std::getline(_file, line);

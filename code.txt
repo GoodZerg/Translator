@@ -4,3 +4,9 @@ if(a => 0) {
 
 for(monkey a; a**c; ++a) {}
 	qwe
+	
+while r
+123.123
+
+int whiler
++++++++++++++++++++++

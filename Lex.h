@@ -26,7 +26,7 @@ struct Token {
 
 class Lex {
 public:
-	Lex();
+	Lex(char * input);
 	Token* getNextToken();
 private:
 	void scan(std::string line);
@@ -36,7 +36,7 @@ private:
 	std::vector<Token*>::iterator _nowToken = _tokens.begin();
 
 	std::fstream _file;
-	std::string _filePath = "D:\\Translator\\code.txt";
+	std::string _filePath = "D:\\Translator\\";
 	std::string _fullRegex = "";
 
 	struct _TypesTemplates {
