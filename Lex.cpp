@@ -1,37 +1,39 @@
 #include "Lex.h"
 
+#define BORDERED(a) "\\b"##a"\\b"
+
 const std::vector<std::string> Lex::_keywordsList = {
-  "if",
-  "for",
-  "while",
-  "this"
+  BORDERED("if"),
+  BORDERED("for"),
+  BORDERED("while"),
+  BORDERED("this")
 };
 
 const std::vector<std::string> Lex::_typesList = {
-  "int",
-  "dounble",
-  "banana",
-  "monkey"
+  BORDERED("int"),
+  BORDERED("dounble"),
+  BORDERED("banana"),
+  BORDERED("monkey")
 };
 
 const std::vector<std::string> Lex::_operatorsList = {
-  "\\+\\+",
-  "\\*\\*",
-  "\\-\\-",
-  "\\*",
-  "\\/",
-  "\\-",
-  "\\+"
+  _addSleshes("++"),
+  _addSleshes("**"),
+  _addSleshes("--"),
+  _addSleshes("*"),
+  _addSleshes("/"),
+  _addSleshes("-"),
+  _addSleshes("+")
 };
 
 const std::vector<std::string> Lex::_punctuationList = {
-  "\\;",
-  "\\:",
-  "\\(",
-  "\\)",
-  "\\{",
-  "\\}",
-  "\\=\\>" 
+  _addSleshes(";"),
+  _addSleshes(":"),
+  _addSleshes("("),
+  _addSleshes(")"),
+  _addSleshes("{"),
+  _addSleshes("}"),
+  _addSleshes("=>") 
 };
 
 const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {
@@ -41,7 +43,8 @@ const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {
    {Type::PUNKTUATION, Lex::_MakeRegexTemplateByList(Lex::_punctuationList)},
    {Type::ID,          R"(_*[a-zA-Z][_a-zA-Z0-9]*)"},  // put id regex - template
    {Type::NUMBER,      R"([0-9]+\.[0-9]+|[0-9]+)"}, // put number regex - template
-   {Type::LITERAL,     R"(\"([^\"])*\")"} // put literal regex - template
+   {Type::LITERAL,     R"(\"([^\"])*\")"}, // put literal regex - template
+   {Type::UNEXPECTED,  R"(.)"}
 };
 
 Lex::Lex() {
@@ -101,4 +104,13 @@ std::string Lex::_MakeRegexTemplateByList(const std::vector<std::string>& list) 
   }
   if(list.size() != 0) answ += list[list.size() - 1];
   return answ;
+}
+
+std::string Lex::_addSleshes(const std::string& ar) noexcept {
+    std::string str("");
+    for (auto i : ar) {
+        str += "\\";
+        str += i;
+    }
+    return str;
 }

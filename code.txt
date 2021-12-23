@@ -1,4 +1,5 @@
-this =>  a _b ** ++ -- ( { } )
-int ; 
-int a;
-for (int i; i => 10; ++i) {
+iffor
+
+aboba
+
+" asfasdfs
