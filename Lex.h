@@ -46,6 +46,8 @@ private:
 
 	static std::string _MakeRegexTemplateByList(const std::vector<std::string>& list) noexcept;
 	static std::string _addSleshes(const std::string& ar) noexcept;
+	static std::string _debug(Type type) noexcept;
+
 	const static std::vector<std::string> _keywordsList;
 	const static std::vector<std::string> _typesList;
 	const static std::vector<std::string> _operatorsList;

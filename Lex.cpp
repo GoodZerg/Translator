@@ -2,6 +2,7 @@
 
 #define BORDERED(a) "\\b"##a"\\b"
 
+
 const std::vector<std::string> Lex::_keywordsList = {
   BORDERED("if"),
   BORDERED("for"),
@@ -88,11 +89,12 @@ void Lex::lexAnalyse(std::string& line) {
         for (auto& it : _typeTemplates) {
             //std::cout << it._template << "\n";
             if (std::regex_match(match.str(), std::regex(it._template))) {
-                std::cout << match.str() << "   " << (int)it._type << "\n";
                 index = it._type;
                 break;
             }
         }
+        if (match.str() == " ") continue;
+        std::cout << match.str() << "   " << _debug(index) << "\n";
         _tokens.push_back(new Token{ index, match.str() });
     }
 }
@@ -113,4 +115,35 @@ std::string Lex::_addSleshes(const std::string& ar) noexcept {
         str += i;
     }
     return str;
+}
+
+std::string Lex::_debug(Type type) noexcept{
+    switch (type) {
+        case Type::KEYWORD:
+            return "KEYWORD";
+            break;
+        case Type::ID:
+            return "ID";
+            break;
+        case Type::TYPE:
+            return "TYPE";
+            break;
+        case Type::OPERATOR:
+            return "OPERATOR";
+            break;
+        case Type::NUMBER:
+            return "NUMBER";
+            break;
+        case Type::LITERAL:
+            return "LITERAL";
+            break;
+        case Type::PUNKTUATION:
+            return "PUNKTUATION";
+            break;
+        case Type::UNEXPECTED:
+            return "UNEXPECTED";
+            break;
+        default:
+            return "ABOBA";
+    }
 }

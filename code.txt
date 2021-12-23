@@ -1,5 +1,6 @@
-iffor
+if(a => 0) {
+	"aboba"
+}
 
-aboba
-
-" asfasdfs
+for(monkey a; a**c; ++a) {}
+	qwe
