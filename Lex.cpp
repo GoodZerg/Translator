@@ -74,7 +74,7 @@ const std::vector<std::string> Lex::_punctuationList = {
   _addSleshes(")"),
   _addSleshes("{"),
   _addSleshes("}"),
-  _addSleshes("=>")
+  _addSleshes("->")
 };
 
 const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {

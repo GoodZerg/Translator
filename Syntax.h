@@ -27,8 +27,6 @@ private:
 
 
   struct TType : public TNode {
-    Token* type = nullptr;
-    Token* name = nullptr;
     std::string typrStr;
   };
   TType* _parseType();
@@ -43,10 +41,7 @@ private:
   typedef std::vector<Token*> Exp;
 
 
-  struct TExp : public TNode {
-    Exp exp;
-  };
-  TExp* _parseExpression();
+  void _parseExpression(Exp& exp);
 
 
   struct TInit : TNode {
@@ -57,7 +52,7 @@ private:
     Exp exp;
     };
 
-    std::vector<_variable*> Variables;
+    std::vector<_variable*> variables;
 
   };
   TInit* _parseInit();
@@ -113,25 +108,27 @@ private:
   };
   TMatch* _parseMatch();
 
-
-  struct TFunction : TNode {
-    Token* nameStruct;
-    Token* nameFunction;
-    struct _parameter {
+  struct _parameter {
       TType* type;
       Token* name;
-    };
+      Exp exp;
+  };
+  void _parseParameters(std::vector<_parameter*>& parameters);
+
+  struct TFunction : TNode {
+    Token* nameStruct = nullptr;
+    Token* nameFunction;
     std::vector<_parameter*> parameters;
     TType* type;
     TBlock* body = nullptr;
   };
-  TFunction* _parseFunction();
+  TFunction* _parseFunction(TFunction* function = nullptr);
 
-  TFunction* _parseFunctionWithStruct();
+  TFunction* _parseFunctionWithStruct(Token* name);
 
   struct TStruct : TNode {
     Token* name;
-    std::vector<TInit*> field;
+    std::vector<_parameter*> parameters;
   };
   TStruct* _parseStruct();
   
