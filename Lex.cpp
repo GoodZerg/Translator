@@ -13,7 +13,9 @@ const std::vector<std::string> Lex::_keywordsList = {
   BORDERED("fn"),
   BORDERED("return"),
   BORDERED("read"),
-  BORDERED("print")
+  BORDERED("print"),
+  BORDERED("break"),
+  BORDERED("continue")
 };
 
 const std::vector<std::string> Lex::_typesList = {
@@ -39,10 +41,6 @@ const std::vector<std::string> Lex::_typesList = {
 const std::vector<std::string> Lex::_operatorsList = {
   _addSleshes("++"),
   _addSleshes("--"),
-  _addSleshes("*"),
-  _addSleshes("/"),
-  _addSleshes("-"),
-  _addSleshes("+"),
   _addSleshes("+="),
   _addSleshes("-="),
   _addSleshes("/="),
@@ -60,11 +58,17 @@ const std::vector<std::string> Lex::_operatorsList = {
   _addSleshes("=="),
   _addSleshes("!="),
   _addSleshes("["),
-  _addSleshes("]")
+  _addSleshes("]"),
+  _addSleshes("*"),
+  _addSleshes("/"),
+  _addSleshes("-"),
+  _addSleshes("+")
+  
 };
 
 const std::vector<std::string> Lex::_punctuationList = {
   _addSleshes(";"),
+  _addSleshes("::"),
   _addSleshes(":"),
   _addSleshes("("),
   _addSleshes(")"),
@@ -112,11 +116,11 @@ Lex::Lex(char * input) {
 }
 
 Token* Lex::getNextToken() {
-  return *_nowToken++;
+  return _nowToken == _tokens.end() ? nullptr : *_nowToken++;
 }
 
-void Lex::decrementTokenIter() {
-  _nowToken--;
+void Lex::decrementTokenItern(int64_t n) {
+  _nowToken -= n;
 }
 
 void Lex::scan(std::string line) {
@@ -151,6 +155,7 @@ void Lex::lexAnalyse(std::string& line) {
         _tokens.push_back(new Token{ index, match.str() });
     }
 }
+
 
 std::string Lex::_MakeRegexTemplateByList(const std::vector<std::string>& list) noexcept {
   std::string answ = "";

@@ -2,18 +2,28 @@
 #include "Lex.h"
 class Syntax {
 public:
-  Syntax(char* input);
+  Syntax(Lex* lex);
 private:
   Lex* lex;
+
+
+  void _parseGeneral();
+
 
   struct TNode {
     virtual ~TNode() = default;
   };
 
 
+  struct TProgram : public TNode {
+      std::vector<TNode*> program;
+  };
+
+
   struct TSingleKeyWord : public TNode {
     Token* keyWord = nullptr;
   };
+  TSingleKeyWord* _parseSingleKeyWord();
 
 
   struct TType : public TNode {
@@ -23,6 +33,7 @@ private:
   };
   TType* _parseType();
 
+
   struct TBlock : public TNode {
     std::vector<TNode*> nodes;
   };
@@ -30,6 +41,7 @@ private:
 
 
   typedef std::vector<Token*> Exp;
+
 
   struct TExp : public TNode {
     Exp exp;
@@ -115,11 +127,14 @@ private:
   };
   TFunction* _parseFunction();
 
+  TFunction* _parseFunctionWithStruct();
+
   struct TStruct : TNode {
     Token* name;
     std::vector<TInit*> field;
   };
   TStruct* _parseStruct();
-
+  
+  TProgram* program;
 };
 

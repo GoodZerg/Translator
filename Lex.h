@@ -19,7 +19,7 @@ enum class Type {
 
 struct Token {
 	Type type;
-	std::string Lexem = "";
+	std::string lexem = "";
 	void* atribute = nullptr;
 };
 
@@ -28,7 +28,7 @@ class Lex {
 public:
 	Lex(char * input);
 	Token* getNextToken();
-	void decrementTokenIter();
+	void decrementTokenItern(int64_t n = 1);
 private:
 	void scan(std::string line);
 	void lexAnalyse(std::string& line);
