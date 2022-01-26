@@ -28,6 +28,7 @@ class Lex {
 public:
 	Lex(char * input);
 	Token* getNextToken();
+	void decrementTokenIter();
 private:
 	void scan(std::string line);
 	void lexAnalyse(std::string& line);

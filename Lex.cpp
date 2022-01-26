@@ -115,6 +115,10 @@ Token* Lex::getNextToken() {
   return *_nowToken++;
 }
 
+void Lex::decrementTokenIter() {
+  _nowToken--;
+}
+
 void Lex::scan(std::string line) {
   // delete comments
    
