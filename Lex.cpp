@@ -31,7 +31,8 @@ const std::vector<std::string> Lex::_typesList = {
   BORDERED("f64"),
   BORDERED("f128"),
   BORDERED("char"),
-  BORDERED("string")
+  BORDERED("string"),
+  BORDERED("void")
 
 };
 
