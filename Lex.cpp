@@ -7,24 +7,59 @@ const std::vector<std::string> Lex::_keywordsList = {
   BORDERED("if"),
   BORDERED("for"),
   BORDERED("while"),
-  BORDERED("this")
+  BORDERED("match"),
+  BORDERED("for each"),
+  BORDERED("struct"),
+  BORDERED("fn"),
+  BORDERED("return"),
+  BORDERED("read"),
+  BORDERED("print")
 };
 
 const std::vector<std::string> Lex::_typesList = {
-  BORDERED("int"),
-  BORDERED("dounble"),
-  BORDERED("banana"),
-  BORDERED("monkey")
+  BORDERED("si8"),
+  BORDERED("si16"),
+  BORDERED("si32"),
+  BORDERED("si64"),
+  BORDERED("si128"),
+  BORDERED("ui8"),
+  BORDERED("ui16"),
+  BORDERED("ui32"),
+  BORDERED("ui64"),
+  BORDERED("ui128"),
+  BORDERED("f32"),
+  BORDERED("f64"),
+  BORDERED("f128"),
+  BORDERED("char"),
+  BORDERED("string")
+
 };
 
 const std::vector<std::string> Lex::_operatorsList = {
   _addSleshes("++"),
-  _addSleshes("**"),
   _addSleshes("--"),
   _addSleshes("*"),
   _addSleshes("/"),
   _addSleshes("-"),
-  _addSleshes("+")
+  _addSleshes("+"),
+  _addSleshes("+="),
+  _addSleshes("-="),
+  _addSleshes("/="),
+  _addSleshes("*="),
+  _addSleshes("^="),
+  _addSleshes("%="),
+  _addSleshes("|="),
+  _addSleshes("&="),
+  _addSleshes("&"),
+  _addSleshes("|"),
+  _addSleshes(","),
+  _addSleshes("~"),
+  _addSleshes("and"),
+  _addSleshes("or"),
+  _addSleshes("=="),
+  _addSleshes("!="),
+  _addSleshes("["),
+  _addSleshes("]")
 };
 
 const std::vector<std::string> Lex::_punctuationList = {
@@ -34,7 +69,7 @@ const std::vector<std::string> Lex::_punctuationList = {
   _addSleshes(")"),
   _addSleshes("{"),
   _addSleshes("}"),
-  _addSleshes("=>") 
+  _addSleshes("=>")
 };
 
 const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {
