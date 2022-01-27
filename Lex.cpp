@@ -109,6 +109,7 @@ Lex::Lex(char * input) {
   }
   std::string line = " ";
   while (!_file.eof()) {
+    ++__line;
     std::getline(_file, line);
     scan(line);
   }
@@ -152,7 +153,7 @@ void Lex::lexAnalyse(std::string& line) {
         }
         if (match.str() == " ") continue;
         std::cout << match.str() << "   " << _debug(index) << "\n";
-        _tokens.push_back(new Token{ index, match.str() });
+        _tokens.push_back(new Token { index, match.str(), __line });
     }
 }
 

@@ -8,9 +8,8 @@
 class SyntaxError : std::exception {
  public:
   SyntaxError() = default;
-  SyntaxError(int line, std::string filePass, std::string messedge)
-      : line(line), filePass(filePass), messedge(messedge) {};
-  std::string filePass;
+  SyntaxError(int line,std::string messedge)
+      : line(line), messedge(messedge) {};
   std::string messedge;
   int line = -1;
 

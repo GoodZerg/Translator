@@ -20,6 +20,7 @@ enum class Type {
 struct Token {
 	Type type;
 	std::string lexem = "";
+  int64_t _line = 0;
 	void* atribute = nullptr;
 };
 
@@ -39,6 +40,8 @@ private:
 	std::fstream _file;
 	std::string _filePath = "D:\\Translator\\";
 	std::string _fullRegex = "";
+
+	int64_t __line = 0;
 
 	struct _TypesTemplates {
 		Type _type;
