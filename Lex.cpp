@@ -8,7 +8,7 @@ const std::vector<std::string> Lex::_keywordsList = {
   BORDERED("for"),
   BORDERED("while"),
   BORDERED("match"),
-  BORDERED("for each"),
+  BORDERED("foreach"),
   BORDERED("struct"),
   BORDERED("fn"),
   BORDERED("return"),

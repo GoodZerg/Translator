@@ -87,9 +87,57 @@ Syntax::TType* Syntax::_parseType() {
 	return nullptr;
 }
 
-// TODO //
 Syntax::TBlock* Syntax::_parseBlock() {
-  return nullptr;
+	TBlock* block = new TBlock();
+
+
+	Token* token = lex->getNextToken();
+	if(token->lexem != "{") {
+		throw SyntaxError(token->_line, "expected {");
+	}
+	while(true) {
+		token = lex->getNextToken();
+		if(token->type == Type::KEYWORD) {
+			if(token->lexem == "if") {
+				block->nodes.push_back(_parseIf());
+			} else if(token->lexem == "for") {
+				block->nodes.push_back(_parseFor());
+			} else if(token->lexem == "while") {
+				block->nodes.push_back(_parseWhile());
+			} else if(token->lexem == "match") {
+				;						// TODO //
+			} else if(token->lexem == "foreach") {
+				block->nodes.push_back(_parseForEach());
+			} else if(token->lexem == "return") {
+				block->nodes.push_back(_parseReturn());
+			} else if(token->lexem == "read") {
+				block->nodes.push_back(_parseRead());
+			} else if(token->lexem == "print") {
+				block->nodes.push_back(_parsePrint());
+			} else if(token->lexem == "continue" || token->lexem == "break") {
+				lex->decrementTokenItern();
+				block->nodes.push_back(_parseSingleKeyWord());
+			} else {
+				throw SyntaxError(token->_line, "unexpected keyword");
+			}
+		} else if(token->type == Type::TYPE) {
+			lex->decrementTokenItern();
+			block->nodes.push_back(_parseInit());
+		} else if(token->lexem == "}"){
+			return block;
+		} else if(token->lexem == "{") {
+			lex->decrementTokenItern();
+			block->nodes.push_back(_parseBlock());
+		} else {
+			lex->decrementTokenItern();
+			Exp exp;
+			_parseExpression(exp);
+			block->nodes.push_back(new TExp{ exp });
+		}
+	}
+
+
+  return block;
 }
 
 // TODO //
@@ -300,7 +348,7 @@ Syntax::TMatch* Syntax::_parseMatch() {
   return nullptr;
 }  
 
-//not completely finished //
+// not completely finished (need using table) //
 void Syntax::_parseParameters(std::vector<_parameter*>& parameters) {
 	Token* token;
 	bool flag = true; // check default params
@@ -333,7 +381,7 @@ void Syntax::_parseParameters(std::vector<_parameter*>& parameters) {
 	lex->decrementTokenItern();
 }
 
-//not completely finished //
+// not completely finished (need using table) //
 Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	if (function == nullptr) {
 		function = new TFunction();
@@ -387,7 +435,7 @@ Syntax::TFunction* Syntax::_parseFunctionWithStruct(Token* name) {
 	return _parseFunction(function);
 }
 
-//not completely finished //
+// not completely finished (need using table) //
 Syntax::TStruct* Syntax::_parseStruct() {
 	TStruct* tstruct = new TStruct();
 	Token* token = lex->getNextToken();

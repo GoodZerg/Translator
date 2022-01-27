@@ -42,8 +42,13 @@ private:
 
   typedef std::vector<Token*> Exp;
 
-
   void _parseExpression(Exp& exp);
+
+  struct TExp : public TNode {
+    Exp exp;
+    TExp(Exp exp) : exp(exp) {
+    }
+  }; // We need this struct to use polymorphism in TBlock :)
 
 
   struct TInit : TNode {
