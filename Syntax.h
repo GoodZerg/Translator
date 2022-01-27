@@ -134,6 +134,11 @@ private:
   };
   TStruct* _parseStruct();
   
+  struct TReturn : TNode {
+    Exp exp;
+  };
+  TReturn* _parseReturn();
+
   TProgram* program;
 };
 

@@ -37,18 +37,64 @@ void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 }
 
 Syntax::TSingleKeyWord* Syntax::_parseSingleKeyWord() {
-	return nullptr;
+	TSingleKeyWord* singleKeyWord = new TSingleKeyWord();
+	Token* token = lex->getNextToken();
+	if(token->lexem == "break" ||
+		token->lexem == "continue"
+		) {
+		singleKeyWord->keyWord = token;
+	} else {
+		throw SyntaxError(token->_line, "expected key word");
+	}
+	token = lex->getNextToken();
+	if(token->lexem != ";") {
+		throw SyntaxError(token->_line, "expected ;");
+	}
+	return singleKeyWord;
 }
 
 Syntax::TType* Syntax::_parseType() {
+	TType* type = new TType();
+
+	Token* token = lex->getNextToken();
+	if(token->type != Type::TYPE) {
+		throw SyntaxError(token->_line, "expected type");
+	}
+
+	type->typrStr.append(token->lexem);
+
+	token = lex->getNextToken();
+	if(token->lexem != "*") {
+		if(token->lexem != "&") {
+			return type;
+		} else {
+			type->typrStr.append(token->lexem);
+			return type;
+		}
+	}
+	while (token->lexem == "*") {
+		type->typrStr.append(token->lexem);
+	}
+
+	token = lex->getNextToken();
+	if(token->lexem != "&") {
+		return type;
+	} else {
+		type->typrStr.append(token->lexem);
+		return type;
+	}
+
 	return nullptr;
 }
 
+// TODO //
 Syntax::TBlock* Syntax::_parseBlock() {
   return nullptr;
 }
 
+// TODO //
 void Syntax::_parseExpression(Exp& exp) {
+	return;
 }
 
 Syntax::TInit* Syntax::_parseInit() {
@@ -90,33 +136,171 @@ Syntax::TInit* Syntax::_parseInit() {
 }
 
 Syntax::TIf* Syntax::_parseIf() {
-  return nullptr;
+	TIf* tif = new TIf();
+
+	Token* token = lex->getNextToken();
+	if(token->lexem != "(") {
+		throw SyntaxError(token->_line, "expected (");
+	}
+	_parseExpression(tif->condition);
+	token = lex->getNextToken();
+
+	if(token->lexem != ")") {
+		throw SyntaxError(token->_line, "expected )");
+	}
+
+	tif->body = _parseBlock();
+
+	token = lex->getNextToken();
+	if(token->lexem != "else") {
+		return tif;
+	}
+
+	tif->elseBody = _parseBlock();
+
+	return tif;
 }
 
 Syntax::TWhile* Syntax::_parseWhile() {
-  return nullptr;
+	TWhile* twhile = new TWhile();
+
+	Token* token = lex->getNextToken();
+	if(token->lexem != "(") {
+		throw SyntaxError(token->_line, "expected (");
+	}
+	_parseExpression(twhile->condition);
+	token = lex->getNextToken();
+
+	if(token->lexem != ")") {
+		throw SyntaxError(token->_line, "expected )");
+	}
+
+	twhile->body = _parseBlock();
+
+	return twhile;
 }
 
 Syntax::TFor* Syntax::_parseFor() {
-  return nullptr;
+	TFor* tfor = new TFor();
+
+	Token* token = lex->getNextToken();
+	if(token->lexem != "(") {
+		throw SyntaxError(token->_line, "expected (");
+	}
+
+	token = lex->getNextToken();
+	if(token->type == Type::TYPE) {
+		lex->decrementTokenItern();
+		tfor->init = _parseInit();
+	} else {
+		_parseExpression(tfor->exp1);
+	}
+	token = lex->getNextToken();
+	if(token->lexem != ";") {
+		throw SyntaxError(token->_line, "expected ;");
+	}
+	_parseExpression(tfor->exp2);
+	token = lex->getNextToken();
+	if(token->lexem != ";") {
+		throw SyntaxError(token->_line, "expected ;");
+	}
+	_parseExpression(tfor->exp3);
+
+
+	token = lex->getNextToken();
+	if(token->lexem != ")") {
+		throw SyntaxError(token->_line, "expected )");
+	}
+
+	tfor->body = _parseBlock();
+
+	return tfor;
 }
 
 Syntax::TForEach* Syntax::_parseForEach() {
-  return nullptr;
+	TForEach* tfor = new TForEach();
+
+	Token* token = lex->getNextToken();
+	if(token->lexem != "(") {
+		throw SyntaxError(token->_line, "expected (");
+	}
+
+	token = lex->getNextToken();
+	if(token->type == Type::TYPE) {
+		lex->decrementTokenItern();
+		tfor->init = _parseInit();
+	} else {
+		_parseExpression(tfor->exp1);
+	}
+	token = lex->getNextToken();
+	if(token->lexem != "->") {
+		throw SyntaxError(token->_line, "expected ->");
+	}
+	_parseExpression(tfor->exp2);
+	
+	token = lex->getNextToken();
+	if(token->lexem != ")") {
+		throw SyntaxError(token->_line, "expected )");
+	}
+
+	tfor->body = _parseBlock();
+
+	return tfor;
+
 }
 
 Syntax::TPrint* Syntax::_parsePrint() {
-  return nullptr;
+	TPrint* tprint = new TPrint();
+
+	Token* token = lex->getNextToken();
+	if(token->lexem != "(") {
+		throw SyntaxError(token->_line, "expected (");
+	}
+
+	_parseExpression(tprint->condition);
+
+	token = lex->getNextToken();
+	if(token->lexem != ")") {
+		throw SyntaxError(token->_line, "expected )");
+	}
+
+	token = lex->getNextToken();
+	if(token->lexem != ";") {
+		throw SyntaxError(token->_line, "expected ;");
+	}
+
+	return tprint;
 }
 
 Syntax::TRead* Syntax::_parseRead() {
-  return nullptr;
+	TRead* tread = new TRead();
+
+	Token* token = lex->getNextToken();
+	if(token->lexem != "(") {
+		throw SyntaxError(token->_line, "expected (");
+	}
+
+	_parseExpression(tread->condition);
+
+	token = lex->getNextToken();
+	if(token->lexem != ")") {
+		throw SyntaxError(token->_line, "expected )");
+	}
+
+	token = lex->getNextToken();
+	if(token->lexem != ";") {
+		throw SyntaxError(token->_line, "expected ;");
+	}
+
+	return tread;
 }
 
+// TODO //
 Syntax::TMatch* Syntax::_parseMatch() {
   return nullptr;
-}
+}  
 
+//not completely finished //
 void Syntax::_parseParameters(std::vector<_parameter*>& parameters) {
 	Token* token;
 	bool flag = true; // check default params
@@ -149,6 +333,7 @@ void Syntax::_parseParameters(std::vector<_parameter*>& parameters) {
 	lex->decrementTokenItern();
 }
 
+//not completely finished //
 Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	if (function == nullptr) {
 		function = new TFunction();
@@ -202,6 +387,7 @@ Syntax::TFunction* Syntax::_parseFunctionWithStruct(Token* name) {
 	return _parseFunction(function);
 }
 
+//not completely finished //
 Syntax::TStruct* Syntax::_parseStruct() {
 	TStruct* tstruct = new TStruct();
 	Token* token = lex->getNextToken();
@@ -230,5 +416,12 @@ Syntax::TStruct* Syntax::_parseStruct() {
 	}
 
 	return tstruct;
+}
+
+Syntax::TReturn* Syntax::_parseReturn() {
+	TReturn* treturn = new TReturn();
+
+	_parseExpression(treturn->exp);
+	return treturn;
 }
 
