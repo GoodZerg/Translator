@@ -139,12 +139,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ExpParser.cpp" />
     <ClCompile Include="Lex.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Syntax.cpp" />
     <ClCompile Include="SyntaxError.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ExpParser.h" />
     <ClInclude Include="Lex.h" />
     <ClInclude Include="Syntax.h" />
     <ClInclude Include="SyntaxError.h" />

@@ -62,7 +62,8 @@ const std::vector<std::string> Lex::_operatorsList = {
   _addSleshes("*"),
   _addSleshes("/"),
   _addSleshes("-"),
-  _addSleshes("+")
+  _addSleshes("+"),
+  _addSleshes("!")
   
 };
 
