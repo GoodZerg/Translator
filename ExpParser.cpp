@@ -26,7 +26,7 @@ const std::map<std::string, int64_t> _priorityTable = {
   {"==", 7}, 
   {"!=", 7}, 
   {"b&", 8}, 
-  {"b|", 9}, 
+  {"|", 9}, 
   {"and", 10}, 
   {"or", 11}, 
   {"+=", 12}, 
@@ -42,28 +42,63 @@ const std::map<std::string, int64_t> _priorityTable = {
 };
 ExpParser::ExpParser(Lex* lex) :_lex(lex) {
   std::deque<Token*> deque;
-  Token* previous_token = nullptr, * current_token = nullptr;
+  Token* previous_token = nullptr, * currentToken = nullptr;
   
-  while (current_token = _lex->getNextToken(), current_token != nullptr || 
-                                               current_token->lexem != ";") {
-    _detectAction(current_token, previous_token, deque);
-    previous_token = current_token;
+  while (currentToken = _lex->getNextToken(), currentToken != nullptr || 
+                                               currentToken->lexem != ";") {
+    _detectAction(currentToken, previous_token, deque);
+    previous_token = currentToken;
   }
 
 }
 
-void ExpParser::_detectAction(Token* current_token, Token* previos_token, std::deque<Token*>& deque) {
-  if (previos_token == nullptr) {
-    if (current_token->type == Type::NUMBER || current_token->type == Type::ID) {
-      _addToPolis(current_token);
-    } else if (current_token->lexem == "-" || current_token->lexem == "+" || current_token->lexem == "++" ||
-      current_token->lexem == "--" || current_token->lexem == "*" || current_token->lexem == "&" ||
-      current_token->lexem == "~" || current_token->lexem == "!" || current_token->lexem == "(") {
-      _pushToDeque(current_token, deque);
-    } 
-    ; // TODO throw error
+void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deque<Token*>& deque) {
+  if (previosToken == nullptr) {
+    if (currentToken->type == Type::NUMBER || currentToken->type == Type::ID) {
+      _addToPolis(currentToken);
+    } else if (currentToken->lexem == "~" || currentToken->lexem == "!" || currentToken->lexem == "(") {
+      _pushToDeque(currentToken, deque);
+    } else if (currentToken->lexem == "+") {
+      currentToken->lexem = "u+";
+      _pushToDeque(currentToken, deque);
+    } else if (currentToken->lexem == "-") {
+      currentToken->lexem = "u-";
+      _pushToDeque(currentToken, deque);
+    } else if (currentToken->lexem == "++") {
+      currentToken->lexem = "u++";
+      _pushToDeque(currentToken, deque);
+    } else if (currentToken->lexem == "--") {
+      currentToken->lexem = "u--";
+      _pushToDeque(currentToken, deque);
+    }
+    throw SyntaxError(currentToken->_line, "unexpected operation"); // TODO rename error
+  } else {
+    _checkErrors(currentToken, previosToken);
+    if (currentToken->type == Type::NUMBER || currentToken->type == Type::ID) {
+      _addToPolis(currentToken);
+    } else if (currentToken->lexem == "+" || currentToken->lexem == "-" || currentToken->lexem == "*" ||
+      currentToken->lexem == "&") {
+      _checkUnary(currentToken, previosToken);
+      _pushToDeque(currentToken, deque);
+    } else if (currentToken->lexem == "++" || currentToken->lexem == "--") {
+      _checkPrefix(currentToken, previosToken);
+      _pushToDeque(currentToken, deque);
+    } else if (currentToken->lexem == ")") {
+      _descentToBracket(currentToken, deque);
+    } else if (currentToken->lexem == "(") {
+      if (previosToken->type == Type::ID) {
+        currentToken->lexem = "fn";
+      }
+      _pushToDeque(currentToken, deque);
+      _pushToDeque(new Token{ Type::PUNKTUATION , "(", 0, nullptr}, deque);
+    } else if (currentToken->lexem == "]") {
+      _descentToIndex(currentToken, deque);
+    } else if (currentToken->lexem == "[") {
+      currentToken->lexem = "[]";
+      _pushToDeque(currentToken, deque);
+    }
+    _pushToDeque(currentToken, deque);
   }
-  
 }
 
 void ExpParser::_addToPolis(Token* token) {
@@ -71,5 +106,56 @@ void ExpParser::_addToPolis(Token* token) {
 }
 
 void ExpParser::_pushToDeque(Token* token, std::deque<Token*>& deque) {
-  deque.push_back(token);
+  while (!deque.empty()) {
+    if (_priorityTable.at(token->lexem) >= _priorityTable.at(deque.back()->lexem)) {
+      polis.push_back(deque.back());
+      deque.pop_back();
+      continue;
+    }
+    deque.push_back(token);
+    break;
+  }
+  if (deque.empty()) {
+    deque.push_back(token);
+  }
+}
+
+void ExpParser::_checkErrors(Token* currentToken, Token* previosToken) {
+
+}
+
+void ExpParser::_checkUnary(Token* currentToken, Token* previosToken) {
+}
+
+void ExpParser::_checkPrefix(Token* currentToken, Token* previosToken) {
+}
+
+void ExpParser::_descentToIndex(Token* token, std::deque<Token*>& deque) {
+  while (!deque.empty()) {
+    if (deque.back()->lexem != "[") {
+      polis.push_back(deque.back());
+      deque.pop_back();
+      continue;
+    }
+    break;
+  }
+  if (deque.empty()) {
+    throw SyntaxError(token->_line, "expected ["); // TODO rename error
+  }
+  deque.back()->lexem = "[]";
+}
+
+void ExpParser::_descentToBracket(Token* token, std::deque<Token*>& deque) {
+  while (!deque.empty()) {
+    if (deque.back()->lexem != "(") {
+      polis.push_back(deque.back());
+      deque.pop_back();
+      continue;
+    }
+    break;
+  }
+  if (deque.empty()) {
+    throw SyntaxError(token->_line, "expected ("); // TODO rename error
+  }
+  deque.pop_back();
 }
