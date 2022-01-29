@@ -1,9 +1,9 @@
 #pragma once
-#include "Lex.h"
-#include "SyntaxError.h"
-#include "Syntax.h"
+
 #include <deque>
 #include <map>
+#include "Syntax.h"
+
 class ExpParser {
 public:
   ExpParser(Lex* lex);
@@ -21,6 +21,6 @@ private:
   void _descentToBracket(Token* token, std::deque<Token*>& deque);
 
   Lex* _lex;
-  static const std::map<std::string, int64_t> _priorityTable;
+  const static std::map<std::string, int64_t> _priorityTable;
 };
 

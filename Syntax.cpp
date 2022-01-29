@@ -30,7 +30,7 @@ void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 				program->program.push_back(_parseFunctionWithStruct(token));
 			} else {
 				lex->decrementTokenItern(2);
-        throw SyntaxError(token->_line, "unexpecte id");
+        throw SyntaxError(token, "unexpecte id");
 			}
 		}
 	}
@@ -44,11 +44,11 @@ Syntax::TSingleKeyWord* Syntax::_parseSingleKeyWord() {
 		) {
 		singleKeyWord->keyWord = token;
 	} else {
-		throw SyntaxError(token->_line, "expected key word");
+		throw SyntaxError(token, "expected key word");
 	}
 	token = lex->getNextToken();
 	if(token->lexem != ";") {
-		throw SyntaxError(token->_line, "expected ;");
+		throw SyntaxError(token, "expected ;");
 	}
 	return singleKeyWord;
 }
@@ -58,7 +58,7 @@ Syntax::TType* Syntax::_parseType() {
 
 	Token* token = lex->getNextToken();
 	if(token->type != Type::TYPE) {
-		throw SyntaxError(token->_line, "expected type");
+		throw SyntaxError(token, "expected type");
 	}
 
 	type->typrStr.append(token->lexem);
@@ -93,7 +93,7 @@ Syntax::TBlock* Syntax::_parseBlock() {
 
 	Token* token = lex->getNextToken();
 	if(token->lexem != "{") {
-		throw SyntaxError(token->_line, "expected {");
+		throw SyntaxError(token, "expected {");
 	}
 	while(true) {
 		token = lex->getNextToken();
@@ -118,7 +118,7 @@ Syntax::TBlock* Syntax::_parseBlock() {
 				lex->decrementTokenItern();
 				block->nodes.push_back(_parseSingleKeyWord());
 			} else {
-				throw SyntaxError(token->_line, "unexpected keyword");
+				throw SyntaxError(token, "unexpected keyword");
 			}
 		} else if(token->type == Type::TYPE) {
 			lex->decrementTokenItern();
@@ -152,7 +152,7 @@ Syntax::TInit* Syntax::_parseInit() {
 	do {
 		Token* token = lex->getNextToken();
 		if (token->type != Type::ID) {
-			throw SyntaxError(token->_line, "expected id");
+			throw SyntaxError(token, "expected id");
 		}
 		Token* name = token;
 		token = lex->getNextToken();
@@ -174,7 +174,7 @@ Syntax::TInit* Syntax::_parseInit() {
 		}
 
 		if (token->lexem != ";") {
-			throw SyntaxError(token->_line, "expected ;");
+			throw SyntaxError(token, "expected ;");
 		}
 		init->variables.push_back(new TInit::_variable{ name, Exp() });
 		break;
@@ -188,13 +188,13 @@ Syntax::TIf* Syntax::_parseIf() {
 
 	Token* token = lex->getNextToken();
 	if(token->lexem != "(") {
-		throw SyntaxError(token->_line, "expected (");
+		throw SyntaxError(token, "expected (");
 	}
 	_parseExpression(tif->condition);
 	token = lex->getNextToken();
 
 	if(token->lexem != ")") {
-		throw SyntaxError(token->_line, "expected )");
+		throw SyntaxError(token, "expected )");
 	}
 
 	tif->body = _parseBlock();
@@ -214,13 +214,13 @@ Syntax::TWhile* Syntax::_parseWhile() {
 
 	Token* token = lex->getNextToken();
 	if(token->lexem != "(") {
-		throw SyntaxError(token->_line, "expected (");
+		throw SyntaxError(token, "expected (");
 	}
 	_parseExpression(twhile->condition);
 	token = lex->getNextToken();
 
 	if(token->lexem != ")") {
-		throw SyntaxError(token->_line, "expected )");
+		throw SyntaxError(token, "expected )");
 	}
 
 	twhile->body = _parseBlock();
@@ -233,7 +233,7 @@ Syntax::TFor* Syntax::_parseFor() {
 
 	Token* token = lex->getNextToken();
 	if(token->lexem != "(") {
-		throw SyntaxError(token->_line, "expected (");
+		throw SyntaxError(token, "expected (");
 	}
 
 	token = lex->getNextToken();
@@ -245,19 +245,19 @@ Syntax::TFor* Syntax::_parseFor() {
 	}
 	token = lex->getNextToken();
 	if(token->lexem != ";") {
-		throw SyntaxError(token->_line, "expected ;");
+		throw SyntaxError(token, "expected ;");
 	}
 	_parseExpression(tfor->exp2);
 	token = lex->getNextToken();
 	if(token->lexem != ";") {
-		throw SyntaxError(token->_line, "expected ;");
+		throw SyntaxError(token, "expected ;");
 	}
 	_parseExpression(tfor->exp3);
 
 
 	token = lex->getNextToken();
 	if(token->lexem != ")") {
-		throw SyntaxError(token->_line, "expected )");
+		throw SyntaxError(token, "expected )");
 	}
 
 	tfor->body = _parseBlock();
@@ -270,7 +270,7 @@ Syntax::TForEach* Syntax::_parseForEach() {
 
 	Token* token = lex->getNextToken();
 	if(token->lexem != "(") {
-		throw SyntaxError(token->_line, "expected (");
+		throw SyntaxError(token, "expected (");
 	}
 
 	token = lex->getNextToken();
@@ -282,13 +282,13 @@ Syntax::TForEach* Syntax::_parseForEach() {
 	}
 	token = lex->getNextToken();
 	if(token->lexem != "->") {
-		throw SyntaxError(token->_line, "expected ->");
+		throw SyntaxError(token, "expected ->");
 	}
 	_parseExpression(tfor->exp2);
 	
 	token = lex->getNextToken();
 	if(token->lexem != ")") {
-		throw SyntaxError(token->_line, "expected )");
+		throw SyntaxError(token, "expected )");
 	}
 
 	tfor->body = _parseBlock();
@@ -302,19 +302,19 @@ Syntax::TPrint* Syntax::_parsePrint() {
 
 	Token* token = lex->getNextToken();
 	if(token->lexem != "(") {
-		throw SyntaxError(token->_line, "expected (");
+		throw SyntaxError(token, "expected (");
 	}
 
 	_parseExpression(tprint->condition);
 
 	token = lex->getNextToken();
 	if(token->lexem != ")") {
-		throw SyntaxError(token->_line, "expected )");
+		throw SyntaxError(token, "expected )");
 	}
 
 	token = lex->getNextToken();
 	if(token->lexem != ";") {
-		throw SyntaxError(token->_line, "expected ;");
+		throw SyntaxError(token, "expected ;");
 	}
 
 	return tprint;
@@ -325,19 +325,19 @@ Syntax::TRead* Syntax::_parseRead() {
 
 	Token* token = lex->getNextToken();
 	if(token->lexem != "(") {
-		throw SyntaxError(token->_line, "expected (");
+		throw SyntaxError(token, "expected (");
 	}
 
 	_parseExpression(tread->condition);
 
 	token = lex->getNextToken();
 	if(token->lexem != ")") {
-		throw SyntaxError(token->_line, "expected )");
+		throw SyntaxError(token, "expected )");
 	}
 
 	token = lex->getNextToken();
 	if(token->lexem != ";") {
-		throw SyntaxError(token->_line, "expected ;");
+		throw SyntaxError(token, "expected ;");
 	}
 
 	return tread;
@@ -355,13 +355,13 @@ void Syntax::_parseParameters(std::vector<_parameter*>& parameters) {
 	do {
 		token = lex->getNextToken();
 		if (token->type != Type::TYPE) {
-			throw SyntaxError(token->_line, "expected Type");
+			throw SyntaxError(token, "expected Type");
 		}
 		lex->decrementTokenItern();
 		TType* type = _parseType();
 		token = lex->getNextToken();
 		if (token->type != Type::ID) {
-			throw SyntaxError(token->_line, "expected id");
+			throw SyntaxError(token, "expected id");
 		}
 		Token* name = token;
 		if (flag) {
@@ -389,13 +389,13 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 
 	Token* token = lex->getNextToken();
 	if (token->type != Type::ID) {
-		throw SyntaxError(token->_line, "expected id");
+		throw SyntaxError(token, "expected id");
 	}
 	function->nameFunction = token; // add in table with pointer
 
 	token = lex->getNextToken();
 	if (token->lexem != "(") {
-		throw SyntaxError(token->_line, "expected (");
+		throw SyntaxError(token, "expected (");
 	}
 	token = lex->getNextToken();
 	if (token->lexem != ")") {
@@ -403,18 +403,18 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 		_parseParameters(function->parameters);
 		token = lex->getNextToken();
 		if (token->lexem != ")") {
-			throw SyntaxError(token->_line, "expected )");
+			throw SyntaxError(token, "expected )");
 		}
 	}
 
 	token = lex->getNextToken();
 	if (token->lexem != "->") {
-		throw SyntaxError(token->_line, "expected ->");
+		throw SyntaxError(token, "expected ->");
 	}
 	
 	token = lex->getNextToken();
 	if (token->type != Type::TYPE) {
-		throw SyntaxError(token->_line, "expected Type");
+		throw SyntaxError(token, "expected Type");
 	}
 	lex->decrementTokenItern();
 	function->type = _parseType();
@@ -440,7 +440,7 @@ Syntax::TStruct* Syntax::_parseStruct() {
 	TStruct* tstruct = new TStruct();
 	Token* token = lex->getNextToken();
 	if (token->type != Type::ID) {
-		throw SyntaxError(token->_line, "expected id");
+		throw SyntaxError(token, "expected id");
 	}
 
 	tstruct->name = token; // TODO add to table
@@ -451,7 +451,7 @@ Syntax::TStruct* Syntax::_parseStruct() {
 	}
 
 	if (token->lexem != "<") {
-		throw SyntaxError(token->_line, "expected <");
+		throw SyntaxError(token, "expected <");
 	}
 	token = lex->getNextToken();
 	if (token->lexem != ">") {
@@ -459,7 +459,7 @@ Syntax::TStruct* Syntax::_parseStruct() {
 		_parseParameters(tstruct->parameters);
 		token = lex->getNextToken();
 		if (token->lexem != ">") {
-			throw SyntaxError(token->_line, "expected >");
+			throw SyntaxError(token, "expected >");
 		}
 	}
 

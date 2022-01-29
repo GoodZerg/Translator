@@ -21,6 +21,7 @@ struct Token {
 	Type type;
 	std::string lexem = "";
 	int64_t _line = 0;
+	int64_t _column = 0;
 	void* atribute = nullptr;
 };
 

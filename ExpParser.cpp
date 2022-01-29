@@ -1,5 +1,6 @@
 #include "ExpParser.h"
-const std::map<std::string, int64_t> _priorityTable = { 
+
+const std::map<std::string, int64_t> ExpParser::_priorityTable = {
   {"fn", 0},
   {"s++", 1},
   {"s--", 1}, 
@@ -40,6 +41,7 @@ const std::map<std::string, int64_t> _priorityTable = {
   {"=", 12}, 
   {",", 13}
 };
+
 ExpParser::ExpParser(Lex* lex) :_lex(lex) {
   std::deque<Token*> deque;
   Token* previous_token = nullptr, * currentToken = nullptr;
@@ -71,7 +73,7 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
       currentToken->lexem = "u--";
       _pushToDeque(currentToken, deque);
     }
-    throw SyntaxError(currentToken->_line, "unexpected operation"); // TODO rename error
+    throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
   } else {
     _checkErrors(currentToken, previosToken);
     if (currentToken->type == Type::NUMBER || currentToken->type == Type::ID) {
@@ -90,7 +92,7 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
         currentToken->lexem = "fn";
       }
       _pushToDeque(currentToken, deque);
-      _pushToDeque(new Token{ Type::PUNKTUATION , "(", 0, nullptr}, deque);
+      _pushToDeque(new Token{ Type::PUNKTUATION , "(", 0, 0, nullptr}, deque);
     } else if (currentToken->lexem == "]") {
       _descentToIndex(currentToken, deque);
     } else if (currentToken->lexem == "[") {
@@ -140,7 +142,7 @@ void ExpParser::_descentToIndex(Token* token, std::deque<Token*>& deque) {
     break;
   }
   if (deque.empty()) {
-    throw SyntaxError(token->_line, "expected ["); // TODO rename error
+    throw SyntaxError(token, "expected ["); // TODO rename error
   }
   deque.back()->lexem = "[]";
 }
@@ -155,7 +157,7 @@ void ExpParser::_descentToBracket(Token* token, std::deque<Token*>& deque) {
     break;
   }
   if (deque.empty()) {
-    throw SyntaxError(token->_line, "expected ("); // TODO rename error
+    throw SyntaxError(token, "expected ("); // TODO rename error
   }
   deque.pop_back();
 }

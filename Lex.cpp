@@ -154,7 +154,8 @@ void Lex::lexAnalyse(std::string& line) {
         }
         if (match.str() == " ") continue;
         std::cout << match.str() << "   " << _debug(index) << "\n";
-        _tokens.push_back(new Token { index, match.str(), __line });
+        _tokens.push_back(new Token { index, match.str(), __line, match.position() });
+        
     }
 }
 

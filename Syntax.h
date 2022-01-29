@@ -1,5 +1,5 @@
 #pragma once
-#include "Lex.h"
+
 #include "SyntaxError.h"
 
 class Syntax {

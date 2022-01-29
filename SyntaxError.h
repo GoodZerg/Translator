@@ -3,15 +3,16 @@
 #include <exception>
 #include <string>
 #include <iostream>
+#include "Lex.h"
 
 
 class SyntaxError : std::exception {
  public:
   SyntaxError() = default;
-  SyntaxError(int line,std::string messedge)
-      : line(line), messedge(messedge) {};
+  SyntaxError(Token* token, std::string messedge)
+      : token(token), messedge(messedge) {};
   std::string messedge;
-  int line = -1;
+  Token* token = nullptr;
 
   void What();
 };
