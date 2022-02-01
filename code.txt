@@ -1,4 +1,17 @@
 ui8 a = 0, b = 10, c, d = 100 + 100;
 
-fn bb(si8 a = 10 * 10 - 5 / a(10 * 1235 ^ 34), ui128 _hh = 20, ui128 k )->void{}
+struct a <char b = 10 * 10, string f = ++c > 17>;
+
+fn bb(si8 a = 10 * 10 - 5 / a(10 * 1235 ^ 34), ui128 _hh = 20, ui128 k )->void{
+	string b;
+	if (a > 10 * 10) {
+	while (d + 5 == 123 & d) {
+		for(f32 a = 10; b < 10; ++b++){
+			foreach( a -> **b) {}
+		}
+	}
+	} else {
+	f32 b;
+	}
+}
 

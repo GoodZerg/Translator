@@ -45,40 +45,49 @@ const std::map<std::string, int64_t> ExpParser::_priorityTable = {
 
 ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
   std::deque<Token*> deque;
-  Token *previous_token = nullptr, *currentToken = nullptr;
+  Token *previosToken = nullptr, *currentToken = nullptr;
   if (end_symbol == "exp") {
     while (currentToken = _getNextToken(), currentToken->lexem != ";") {
-      _detectAction(currentToken, previous_token, deque);
-      previous_token = currentToken;
+      _detectAction(currentToken, previosToken, deque);
+      previosToken = currentToken;
     }
   } else if (end_symbol == "fn") {
     Token* tmp = nullptr;
     while (currentToken = _getNextToken(), tmp = _getNextToken(), currentToken->lexem != "," &&
       (currentToken->lexem != ")" || tmp->lexem != "->")) {
       lex->decrementTokenItern();
-      _detectAction(currentToken, previous_token, deque);
-      previous_token = currentToken;
+      _detectAction(currentToken, previosToken, deque);
+      previosToken = currentToken;
     }
     lex->decrementTokenItern();
   } else if (end_symbol == "if") {
     Token* tmp = nullptr;
     while (currentToken = _getNextToken(), tmp = _getNextToken(), currentToken->lexem != ")" && tmp->lexem != "{") {
       lex->decrementTokenItern();
-      _detectAction(currentToken, previous_token, deque);
-      previous_token = currentToken;
+      _detectAction(currentToken, previosToken, deque);
+      previosToken = currentToken;
     }
     lex->decrementTokenItern();
   } else if (end_symbol == "init") {
     while (currentToken = _getNextToken(), currentToken->lexem != "," && currentToken->lexem != ";") {
-      _detectAction(currentToken, previous_token, deque);
-      previous_token = currentToken;
+      _detectAction(currentToken, previosToken, deque);
+      previosToken = currentToken;
     }
   } else if (end_symbol == "print") {
     Token* tmp = nullptr;
     while (currentToken = _getNextToken(), tmp = _getNextToken(), currentToken->lexem != ")" && tmp->lexem != ";") {
       lex->decrementTokenItern();
-      _detectAction(currentToken, previous_token, deque);
-      previous_token = currentToken;
+      _detectAction(currentToken, previosToken, deque);
+      previosToken = currentToken;
+    }
+    lex->decrementTokenItern();
+  } else if (end_symbol == "struct") {
+    Token* tmp = nullptr;
+    while (currentToken = _getNextToken(), tmp = _getNextToken(), currentToken->lexem != "," &&
+      (currentToken->lexem != ">" || tmp->lexem != ";")) {
+      lex->decrementTokenItern();
+      _detectAction(currentToken, previosToken, deque);
+      previosToken = currentToken;
     }
     lex->decrementTokenItern();
   }
@@ -88,14 +97,14 @@ ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
   while (!deque.empty()) {
     if (deque.back()->lexem != "(") {
       polis.push_back(deque.back());
-      previous_token = deque.back();
+      previosToken = deque.back();
       deque.pop_back();
       continue;
     }
     break;
   }
   if (deque.empty()) {
-    throw SyntaxError(previous_token, "expected ("); // TODO rename error
+    throw SyntaxError(previosToken, "expected ("); // TODO rename error
   }
   deque.pop_back();
 
@@ -115,10 +124,16 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
       currentToken->lexem = "u-";
       _pushToDeque(currentToken, deque);
     } else if (currentToken->lexem == "++") {
-      currentToken->lexem = "u++";
+      currentToken->lexem = "p++";
       _pushToDeque(currentToken, deque);
     } else if (currentToken->lexem == "--") {
-      currentToken->lexem = "u--";
+      currentToken->lexem = "p--";
+      _pushToDeque(currentToken, deque);
+    } else if (currentToken->lexem == "*") {
+      currentToken->lexem = "u*";
+      _pushToDeque(currentToken, deque);
+    } else if (currentToken->lexem == "&") {
+      currentToken->lexem = "u&";
       _pushToDeque(currentToken, deque);
     } else {
       throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
@@ -334,15 +349,15 @@ void ExpParser::_checkUnary(Token* currentToken, Token* previosToken) {
 void ExpParser::_checkPrefix(Token* currentToken, Token* previosToken) {
   if (previosToken->type == Type::ID || previosToken->lexem == ")" || previosToken->lexem == "]") {
     if (currentToken->lexem == "++") {
-      currentToken->lexem == "s++";
+      currentToken->lexem = "s++";
     } else {
-      currentToken->lexem == "s--";
+      currentToken->lexem = "s--";
     }
   } else {
     if (currentToken->lexem == "++") {
-      currentToken->lexem == "p++";
+      currentToken->lexem = "p++";
     } else {
-      currentToken->lexem == "p--";
+      currentToken->lexem = "p--";
     }
   }
 }

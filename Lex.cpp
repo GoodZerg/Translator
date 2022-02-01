@@ -15,7 +15,8 @@ const std::vector<std::string> Lex::_keywordsList = {
   BORDERED("read"),
   BORDERED("print"),
   BORDERED("break"),
-  BORDERED("continue")
+  BORDERED("continue"),
+  BORDERED("else")
 };
 
 const std::vector<std::string> Lex::_typesList = {

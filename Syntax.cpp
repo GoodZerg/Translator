@@ -7,7 +7,7 @@ Syntax::Syntax(Lex* lex) {
   _parseGeneral();
   } catch (SyntaxError error) {
     error.What();
-    system("pause");
+		exit(0);
 	}
 }
 
@@ -142,7 +142,7 @@ Syntax::TBlock* Syntax::_parseBlock() {
 }
 
 // TODO //
-void Syntax::_parseExpression(Exp* exp, std::string end_symbol) {
+void Syntax::_parseExpression(Exp*& exp, std::string end_symbol) {
 	exp = new Exp(lex, end_symbol);
 }
 
@@ -170,7 +170,7 @@ Syntax::TInit* Syntax::_parseInit() {
 				continue;
 			}
 			if (token->lexem == ";") {
-				break;
+				return init;
 			}
 		}
 
@@ -178,10 +178,8 @@ Syntax::TInit* Syntax::_parseInit() {
 			throw SyntaxError(token, "expected ;");
 		}
 		init->variables.push_back(new TInit::_variable{ name, nullptr });
-		break;
+		return init;
 	} while (true);
-
-	return init;
 }
 
 Syntax::TIf* Syntax::_parseIf() {
@@ -202,6 +200,7 @@ Syntax::TIf* Syntax::_parseIf() {
 
 	token = _getNextToken();
 	if(token->lexem != "else") {
+		lex->decrementTokenItern();
 		return tif;
 	}
 
@@ -242,19 +241,21 @@ Syntax::TFor* Syntax::_parseFor() {
 		lex->decrementTokenItern();
 		tfor->init = _parseInit();
 	} else {
+		lex->decrementTokenItern();
 		_parseExpression(tfor->exp1, "exp");
+		token = _getNextToken();
+		if (token->lexem != ";") {
+			throw SyntaxError(token, "expected ;");
+		}
 	}
-	token = _getNextToken();
-	if(token->lexem != ";") {
-		throw SyntaxError(token, "expected ;");
-	}
+	
 	_parseExpression(tfor->exp2, "exp");
 	token = _getNextToken();
 	if(token->lexem != ";") {
 		throw SyntaxError(token, "expected ;");
 	}
-	_parseExpression(tfor->exp3, "if");
 
+	_parseExpression(tfor->exp3, "if");
 
 	token = _getNextToken();
 	if(token->lexem != ")") {
@@ -354,7 +355,7 @@ Syntax::TMatch* Syntax::_parseMatch() {
 }  
 
 // not completely finished (need using table) //
-void Syntax::_parseParameters(std::vector<_parameter*>& parameters) {
+void Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::string end_symbol) {
 	Token* token;
 	bool flag = true; // check default params
 	do {
@@ -377,7 +378,7 @@ void Syntax::_parseParameters(std::vector<_parameter*>& parameters) {
 				continue;
 			}
 			parameters.push_back(new _parameter{ type, name, nullptr });
-			_parseExpression(parameters[parameters.size() - 1]->exp, "fn");
+			_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
 		} else {
 			parameters.push_back(new _parameter{ type, name, nullptr });
 		}
@@ -405,7 +406,7 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	token = _getNextToken();
 	if (token->lexem != ")") {
 		lex->decrementTokenItern();
-		_parseParameters(function->parameters);
+		_parseParameters(function->parameters, "fn");
 		token = _getNextToken();
 		if (token->lexem != ")") {
 			throw SyntaxError(token, "expected )");
@@ -461,11 +462,16 @@ Syntax::TStruct* Syntax::_parseStruct() {
 	token = _getNextToken();
 	if (token->lexem != ">") {
 		lex->decrementTokenItern();
-		_parseParameters(tstruct->parameters);
+		_parseParameters(tstruct->parameters, "struct");
 		token = _getNextToken();
 		if (token->lexem != ">") {
 			throw SyntaxError(token, "expected >");
 		}
+	}
+
+	token = _getNextToken();
+	if (token->lexem != ";") {
+		throw SyntaxError(token, "expected ;");
 	}
 
 	return tstruct;

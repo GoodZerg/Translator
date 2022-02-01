@@ -42,7 +42,7 @@ private:
 
   typedef ExpParser Exp;
 
-  void _parseExpression(Exp* exp, std::string end_symbol);
+  void _parseExpression(Exp*& exp, std::string end_symbol);
 
   struct TExp : public TNode {
     Exp* exp;
@@ -119,7 +119,7 @@ private:
       Token* name;
       Exp* exp;
   };
-  void _parseParameters(std::vector<_parameter*>& parameters);
+  void _parseParameters(std::vector<_parameter*>& parameters, std::string end_symbol);
 
   struct TFunction : TNode {
     Token* nameStruct = nullptr;
