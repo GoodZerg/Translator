@@ -44,10 +44,9 @@ const std::map<std::string, int64_t> ExpParser::_priorityTable = {
 
 ExpParser::ExpParser(Lex* lex) :_lex(lex) {
   std::deque<Token*> deque;
-  Token* previous_token = nullptr, * currentToken = nullptr;
+  Token *previous_token = nullptr, *currentToken = nullptr;
   
-  while (currentToken = _lex->getNextToken(), currentToken != nullptr || 
-                                               currentToken->lexem != ";") {
+  while (currentToken = _getNextToken(), currentToken->lexem != ";") {
     _detectAction(currentToken, previous_token, deque);
     previous_token = currentToken;
   }

@@ -9,6 +9,8 @@
 class SyntaxError : std::exception {
  public:
   SyntaxError() = default;
+  SyntaxError(std::string messedge)
+    : token(nullptr), messedge(messedge) {};
   SyntaxError(Token* token, std::string messedge)
       : token(token), messedge(messedge) {};
   std::string messedge;
