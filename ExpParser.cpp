@@ -4,42 +4,42 @@ const std::map<std::string, int64_t> ExpParser::_priorityTable = {
   {"fn", 0}, //done
   {"s++", 1},//done
   {"s--", 1}, //done
-  {".", 1}, 
-  {"[]", 1}, 
+  {".", 1}, //done
+  {"[]", 1}, //done
   {"p++", 2}, //done
   {"p--", 2}, //done
   {"u+", 2}, //done
   {"u-", 2}, //done
-  {"!", 2}, 
-  {"~", 2}, 
+  {"!", 2}, //done
+  {"~", 2}, //done
   {"u*", 2}, //done
-  {"u&", 2}, 
+  {"u&", 2}, //done
   {"^", 3}, //done
   {"b*", 4}, //done
   {"/", 4}, //done
-  {"%", 4}, 
-  {"b+", 5}, // done
+  {"%", 4}, //done
+  {"b+", 5}, //done
   {"b-", 5}, //done
-  {">", 6}, 
-  {"<", 6}, 
-  {">=", 6}, 
-  {"<=", 6}, 
-  {"==", 7}, 
-  {"!=", 7}, 
-  {"b&", 8}, 
-  {"|", 9}, 
-  {"and", 10}, 
-  {"or", 11}, 
-  {"+=", 12}, 
-  {"-=", 12}, 
-  {"*=", 12}, 
-  {"/=", 12}, 
-  {"%=", 12}, 
-  {"&=", 12}, 
-  {"|=", 12}, 
-  {"^=", 12}, 
-  {"=", 12}, 
-  {",", 13}
+  {">", 6}, //done
+  {"<", 6}, //done
+  {">=", 6}, //done
+  {"<=", 6}, //done
+  {"==", 7}, //done
+  {"!=", 7}, //done
+  {"b&", 8}, //done
+  {"|", 9}, //done
+  {"and", 10}, //done
+  {"or", 11}, //done
+  {"+=", 12}, //done
+  {"-=", 12}, //done
+  {"*=", 12}, //done
+  {"/=", 12}, //done
+  {"%=", 12}, //done
+  {"&=", 12}, //done
+  {"|=", 12}, //done
+  {"^=", 12}, //done
+  {"=", 12}, //done
+  {",", 13} //done
 };
 
 ExpParser::ExpParser(Lex* lex) :_lex(lex) {
@@ -90,10 +90,10 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
       _descentToBracket(currentToken, deque);
     } else if (currentToken->lexem == "(") {
       if (previosToken->type == Type::ID) {
-        currentToken->lexem = "fn";
+        _pushToDeque(new Token{ Type::KEYWORD , "fn", 0, 0, nullptr }, deque);
+        currentToken->type == Type::UNEXPECTED;
       }
       _pushToDeque(currentToken, deque);
-      _pushToDeque(new Token{ Type::PUNKTUATION , "(", 0, 0, nullptr}, deque);
     } else if (currentToken->lexem == "]") {
       _descentToIndex(currentToken, deque);
     } else if (currentToken->lexem == "[") {
@@ -160,7 +160,7 @@ void ExpParser::_checkErrors(Token* currentToken, Token* previosToken) {
     if (previosToken->type == Type::LITERAL || previosToken->lexem == ".") {
       throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
     }
-  } else if (currentToken->lexem == "/") {
+  } else if (currentToken->lexem == "/" || currentToken->lexem == "%") {
     if (!(previosToken->type == Type::NUMBER || previosToken->type == Type::ID || previosToken->lexem == "]" || 
       previosToken->lexem == ")" || previosToken->lexem == "s++" || previosToken->lexem == "s--")) {
       throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
@@ -190,15 +190,64 @@ void ExpParser::_checkErrors(Token* currentToken, Token* previosToken) {
       throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
     }
   } else if (currentToken->lexem == ")") {
-    if (true) {
+    if (!(previosToken->type == Type::ID || previosToken->type == Type::NUMBER || previosToken->type == Type::LITERAL ||
+      previosToken->type == Type::UNEXPECTED || previosToken->lexem == "]" || previosToken->lexem == ")" ||
+      previosToken->lexem == "s++" || previosToken->lexem == "s--")) {
       throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
     }
   } else if (currentToken->lexem == "]") {
-    if (true) {
+    if (!(previosToken->type == Type::ID || previosToken->type == Type::NUMBER || previosToken->type == Type::LITERAL ||
+      previosToken->lexem == "]" || previosToken->lexem == ")" || previosToken->lexem == "s++" || 
+      previosToken->lexem == "s--")) {
       throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
     }
-  } else if (currentToken->lexem == "+") {
-    if (true) {
+  } else if (currentToken->lexem == ",") {
+    if (!(previosToken->type == Type::ID || previosToken->type == Type::NUMBER || previosToken->type == Type::LITERAL || 
+      previosToken->lexem == ")" || previosToken->lexem == "]" || previosToken->lexem == "s++" || 
+      previosToken->lexem == "s--")) {
+      throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
+    }
+  } else if (currentToken->lexem == "=" || currentToken->lexem == "^=" || currentToken->lexem == "%=" ||
+    currentToken->lexem == "/=" || currentToken->lexem == "*=" || currentToken->lexem == "|=" || 
+    currentToken->lexem == "&=" || currentToken->lexem == "+=" || currentToken->lexem == "-=") {
+    if (!(previosToken->type == Type::ID || previosToken->lexem == ")" || previosToken->lexem == "]")) {
+      throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
+    }
+  } else if (currentToken->lexem == "==" || currentToken->lexem == ">" || currentToken->lexem == ">=" ||
+    currentToken->lexem == "<" || currentToken->lexem == "<=" || currentToken->lexem == "!=") {
+    if (!(previosToken->type == Type::ID || previosToken->type == Type::NUMBER || previosToken->type == Type::LITERAL ||
+      previosToken->lexem == ")" || previosToken->lexem == "]" || previosToken->lexem == "s++" ||
+      previosToken->lexem == "s--")) {
+      throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
+    }
+  } else if (currentToken->lexem == "and" || currentToken->lexem == "or") {
+    if (!(previosToken->type == Type::ID || previosToken->type == Type::NUMBER || previosToken->type == Type::LITERAL ||
+      previosToken->lexem == ")" || previosToken->lexem == "]" || previosToken->lexem == "s++" ||
+      previosToken->lexem == "s--")) {
+      throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
+    }
+  } else if (currentToken->lexem == "|" || currentToken->lexem == "b&") {
+    if (!(previosToken->type == Type::ID || previosToken->type == Type::NUMBER || previosToken->lexem == ")" || 
+      previosToken->lexem == "]" || previosToken->lexem == "s++" || previosToken->lexem == "s--")) {
+      throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
+    }
+  } else if (currentToken->lexem == "u&") {
+    if (previosToken->type == Type::ID || previosToken->type == Type::NUMBER || previosToken->type == Type::LITERAL ||
+      previosToken->lexem == ")" || previosToken->lexem == "]" || previosToken->lexem == "u&" ||
+      previosToken->lexem == "u-" || previosToken->lexem == "p++" || previosToken->lexem == "p--" ||
+      previosToken->lexem == "s--" || previosToken->lexem == "s++" || previosToken->lexem == "~" || 
+      previosToken->lexem == ".") {
+      throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
+    }
+  } else if (currentToken->lexem == "!") {
+    if (previosToken->type == Type::ID || previosToken->type == Type::NUMBER || previosToken->type == Type::LITERAL ||
+      previosToken->lexem == ")" || previosToken->lexem == "]" || previosToken->lexem == "u&" ||
+      previosToken->lexem == "u*" || previosToken->lexem == "p++" || previosToken->lexem == "p--" ||
+      previosToken->lexem == "s--" || previosToken->lexem == "s++" || previosToken->lexem == ".") {
+      throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
+    }
+  } else if (currentToken->lexem == ".") {
+    if (!(previosToken->type == Type::ID || previosToken->lexem == ")" || previosToken->lexem == "]")) {
       throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
     }
   }
