@@ -1,8 +1,6 @@
 #pragma once
 
-#include "SyntaxError.h"
-
-#define _getNextToken() lex->getNextToken() == nullptr ? throw( SyntaxError("unxpected end of file")) : (lex->decrementTokenItern(), lex->getNextToken())
+#include "ExpParser.h"
 
 class Syntax {
 public:
@@ -42,13 +40,13 @@ private:
   TBlock* _parseBlock();
 
 
-  typedef std::vector<Token*> Exp;
+  typedef ExpParser Exp;
 
-  void _parseExpression(Exp& exp);
+  void _parseExpression(Exp* exp, std::string end_symbol);
 
   struct TExp : public TNode {
-    Exp exp;
-    TExp(Exp exp) : exp(exp) {
+    Exp* exp;
+    TExp(Exp* exp) : exp(exp) {
     }
   }; // We need this struct to use polymorphism in TBlock :)
 
@@ -58,7 +56,7 @@ private:
 
     struct _variable {
     Token* name;
-    Exp exp;
+    Exp* exp;
     };
 
     std::vector<_variable*> variables;
@@ -67,7 +65,7 @@ private:
   TInit* _parseInit();
 
   struct TIf : TNode {
-    Exp condition;
+    Exp* condition;
     TBlock* body = nullptr;
     TBlock* elseBody = nullptr;
   };
@@ -75,39 +73,38 @@ private:
 
 
   struct TWhile : TNode {
-    Exp condition;
+    Exp* condition;
     TBlock* body = nullptr;
   };
   TWhile* _parseWhile();
 
 
   struct TFor : TNode {
-    Exp exp1;
+    Exp* exp1;
     TInit* init = nullptr;
-    Exp exp2;
-    Exp exp3;
+    Exp* exp2;
+    Exp* exp3;
     TBlock* body = nullptr;
   };
   TFor* _parseFor();
 
 
   struct TForEach : TNode {
-    Exp exp1;
-    TInit* init = nullptr;
-    Exp exp2;
+    Exp* exp1;
+    TType* type = nullptr;
     TBlock* body = nullptr;
   };
   TForEach* _parseForEach();
 
 
   struct TPrint : TNode {
-    Exp condition;
+    Exp* condition;
   };
   TPrint* _parsePrint();
 
 
   struct TRead : TNode {
-    Exp condition;
+    Exp* condition;
   };
   TRead* _parseRead();
 
@@ -120,7 +117,7 @@ private:
   struct _parameter {
       TType* type;
       Token* name;
-      Exp exp;
+      Exp* exp;
   };
   void _parseParameters(std::vector<_parameter*>& parameters);
 
@@ -142,7 +139,7 @@ private:
   TStruct* _parseStruct();
   
   struct TReturn : TNode {
-    Exp exp;
+    Exp* exp;
   };
   TReturn* _parseReturn();
 

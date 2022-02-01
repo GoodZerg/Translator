@@ -6,6 +6,8 @@
 #include <vector>
 #include <regex>
 
+#define _getNextToken() lex->getNextToken() == nullptr ? throw( SyntaxError("unxpected end of file")) : (lex->decrementTokenItern(), lex->getNextToken())
+
 enum class Type {
 	KEYWORD,
 	ID,

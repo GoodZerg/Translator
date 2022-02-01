@@ -66,25 +66,26 @@ Syntax::TType* Syntax::_parseType() {
 	token = _getNextToken();
 	if(token->lexem != "*") {
 		if(token->lexem != "&") {
+			lex->decrementTokenItern();
 			return type;
 		} else {
 			type->typrStr.append(token->lexem);
 			return type;
 		}
 	}
+
 	while (token->lexem == "*") {
 		type->typrStr.append(token->lexem);
+		token = _getNextToken();
 	}
 
-	token = _getNextToken();
 	if(token->lexem != "&") {
+		lex->decrementTokenItern();
 		return type;
 	} else {
 		type->typrStr.append(token->lexem);
 		return type;
 	}
-
-	return nullptr;
 }
 
 Syntax::TBlock* Syntax::_parseBlock() {
@@ -130,8 +131,8 @@ Syntax::TBlock* Syntax::_parseBlock() {
 			block->nodes.push_back(_parseBlock());
 		} else {
 			lex->decrementTokenItern();
-			Exp exp;
-			_parseExpression(exp);
+			Exp* exp = nullptr;
+			_parseExpression(exp, "exp");
 			block->nodes.push_back(new TExp{ exp });
 		}
 	}
@@ -141,8 +142,8 @@ Syntax::TBlock* Syntax::_parseBlock() {
 }
 
 // TODO //
-void Syntax::_parseExpression(Exp& exp) {
-	return;
+void Syntax::_parseExpression(Exp* exp, std::string end_symbol) {
+	exp = new Exp(lex, end_symbol);
 }
 
 Syntax::TInit* Syntax::_parseInit() {
@@ -157,13 +158,13 @@ Syntax::TInit* Syntax::_parseInit() {
 		Token* name = token;
 		token = _getNextToken();
 		if (token->lexem == ",") {
-			init->variables.push_back(new TInit::_variable{ name, Exp() });
+			init->variables.push_back(new TInit::_variable{ name, nullptr });
 			continue;
 		}
 
 		if (token->lexem == "=") {
-			init->variables.push_back(new TInit::_variable{ name, Exp() });
-			_parseExpression(init->variables[init->variables.size() - 1]->exp);
+			init->variables.push_back(new TInit::_variable{ name, nullptr });
+			_parseExpression(init->variables[init->variables.size() - 1]->exp, "init");
 			token = _getNextToken();
 			if (token->lexem == ",") {
 				continue;
@@ -176,7 +177,7 @@ Syntax::TInit* Syntax::_parseInit() {
 		if (token->lexem != ";") {
 			throw SyntaxError(token, "expected ;");
 		}
-		init->variables.push_back(new TInit::_variable{ name, Exp() });
+		init->variables.push_back(new TInit::_variable{ name, nullptr });
 		break;
 	} while (true);
 
@@ -190,7 +191,7 @@ Syntax::TIf* Syntax::_parseIf() {
 	if(token->lexem != "(") {
 		throw SyntaxError(token, "expected (");
 	}
-	_parseExpression(tif->condition);
+	_parseExpression(tif->condition, "if");
 	token = _getNextToken();
 
 	if(token->lexem != ")") {
@@ -216,7 +217,7 @@ Syntax::TWhile* Syntax::_parseWhile() {
 	if(token->lexem != "(") {
 		throw SyntaxError(token, "expected (");
 	}
-	_parseExpression(twhile->condition);
+	_parseExpression(twhile->condition, "if");
 	token = _getNextToken();
 
 	if(token->lexem != ")") {
@@ -241,18 +242,18 @@ Syntax::TFor* Syntax::_parseFor() {
 		lex->decrementTokenItern();
 		tfor->init = _parseInit();
 	} else {
-		_parseExpression(tfor->exp1);
+		_parseExpression(tfor->exp1, "exp");
 	}
 	token = _getNextToken();
 	if(token->lexem != ";") {
 		throw SyntaxError(token, "expected ;");
 	}
-	_parseExpression(tfor->exp2);
+	_parseExpression(tfor->exp2, "exp");
 	token = _getNextToken();
 	if(token->lexem != ";") {
 		throw SyntaxError(token, "expected ;");
 	}
-	_parseExpression(tfor->exp3);
+	_parseExpression(tfor->exp3, "if");
 
 
 	token = _getNextToken();
@@ -276,15 +277,19 @@ Syntax::TForEach* Syntax::_parseForEach() {
 	token = _getNextToken();
 	if(token->type == Type::TYPE) {
 		lex->decrementTokenItern();
-		tfor->init = _parseInit();
-	} else {
-		_parseExpression(tfor->exp1);
+		tfor->type = _parseType();
+		token = _getNextToken();
 	}
+
+	if (token->type != Type::ID) {
+		throw SyntaxError(token, "expected ID");
+	}
+
 	token = _getNextToken();
 	if(token->lexem != "->") {
 		throw SyntaxError(token, "expected ->");
 	}
-	_parseExpression(tfor->exp2);
+	_parseExpression(tfor->exp1, "if");
 	
 	token = _getNextToken();
 	if(token->lexem != ")") {
@@ -305,7 +310,7 @@ Syntax::TPrint* Syntax::_parsePrint() {
 		throw SyntaxError(token, "expected (");
 	}
 
-	_parseExpression(tprint->condition);
+	_parseExpression(tprint->condition, "print");
 
 	token = _getNextToken();
 	if(token->lexem != ")") {
@@ -328,7 +333,7 @@ Syntax::TRead* Syntax::_parseRead() {
 		throw SyntaxError(token, "expected (");
 	}
 
-	_parseExpression(tread->condition);
+	_parseExpression(tread->condition, "print");
 
 	token = _getNextToken();
 	if(token->lexem != ")") {
@@ -368,13 +373,13 @@ void Syntax::_parseParameters(std::vector<_parameter*>& parameters) {
 			token = _getNextToken();
 			if (token->lexem != "=") {
 				flag = false;
-				parameters.push_back(new _parameter{ type, name, Exp() });
+				parameters.push_back(new _parameter{ type, name, nullptr });
 				continue;
 			}
-			parameters.push_back(new _parameter{ type, name, Exp() });
-			_parseExpression(parameters[parameters.size() - 1]->exp);
+			parameters.push_back(new _parameter{ type, name, nullptr });
+			_parseExpression(parameters[parameters.size() - 1]->exp, "fn");
 		} else {
-			parameters.push_back(new _parameter{ type, name, Exp() });
+			parameters.push_back(new _parameter{ type, name, nullptr });
 		}
 		token = _getNextToken();
 	} while (token->lexem == ",");
@@ -423,7 +428,7 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	if (token->lexem == ";") {
 		return function; // TODO add in table that function not definition
 	}
-
+	lex->decrementTokenItern();
 	function->body = _parseBlock();
 
 	return function;
@@ -469,7 +474,7 @@ Syntax::TStruct* Syntax::_parseStruct() {
 Syntax::TReturn* Syntax::_parseReturn() {
 	TReturn* treturn = new TReturn();
 
-	_parseExpression(treturn->exp);
+	_parseExpression(treturn->exp, "exp");
 	return treturn;
 }
 

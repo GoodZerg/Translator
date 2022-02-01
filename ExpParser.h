@@ -2,11 +2,12 @@
 
 #include <deque>
 #include <map>
-#include "Syntax.h"
+#include <string>
+#include "SyntaxError.h"
 
 class ExpParser {
 public:
-  ExpParser(Lex* lex);
+  ExpParser(Lex* lex, std::string end_symbol);
 
   std::vector<Token*> polis;
 private:

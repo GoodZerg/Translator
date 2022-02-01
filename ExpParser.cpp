@@ -39,18 +39,66 @@ const std::map<std::string, int64_t> ExpParser::_priorityTable = {
   {"|=", 12}, //done
   {"^=", 12}, //done
   {"=", 12}, //done
-  {",", 13} //done
+  {",", 13}, //done
+  {"(", 14}//done
 };
 
-ExpParser::ExpParser(Lex* lex) :_lex(lex) {
+ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
   std::deque<Token*> deque;
   Token *previous_token = nullptr, *currentToken = nullptr;
-  
-  while (currentToken = _getNextToken(), currentToken->lexem != ";") {
-    _detectAction(currentToken, previous_token, deque);
-    previous_token = currentToken;
+  if (end_symbol == "exp") {
+    while (currentToken = _getNextToken(), currentToken->lexem != ";") {
+      _detectAction(currentToken, previous_token, deque);
+      previous_token = currentToken;
+    }
+  } else if (end_symbol == "fn") {
+    Token* tmp = nullptr;
+    while (currentToken = _getNextToken(), tmp = _getNextToken(), currentToken->lexem != "," &&
+      (currentToken->lexem != ")" || tmp->lexem != "->")) {
+      lex->decrementTokenItern();
+      _detectAction(currentToken, previous_token, deque);
+      previous_token = currentToken;
+    }
+    lex->decrementTokenItern();
+  } else if (end_symbol == "if") {
+    Token* tmp = nullptr;
+    while (currentToken = _getNextToken(), tmp = _getNextToken(), currentToken->lexem != ")" && tmp->lexem != "{") {
+      lex->decrementTokenItern();
+      _detectAction(currentToken, previous_token, deque);
+      previous_token = currentToken;
+    }
+    lex->decrementTokenItern();
+  } else if (end_symbol == "init") {
+    while (currentToken = _getNextToken(), currentToken->lexem != "," && currentToken->lexem != ";") {
+      _detectAction(currentToken, previous_token, deque);
+      previous_token = currentToken;
+    }
+  } else if (end_symbol == "print") {
+    Token* tmp = nullptr;
+    while (currentToken = _getNextToken(), tmp = _getNextToken(), currentToken->lexem != ")" && tmp->lexem != ";") {
+      lex->decrementTokenItern();
+      _detectAction(currentToken, previous_token, deque);
+      previous_token = currentToken;
+    }
+    lex->decrementTokenItern();
   }
   // TODO check code in pastebin
+  deque.push_front(new Token{ Type::PUNKTUATION , "(", 0, 0, nullptr });
+
+  while (!deque.empty()) {
+    if (deque.back()->lexem != "(") {
+      polis.push_back(deque.back());
+      previous_token = deque.back();
+      deque.pop_back();
+      continue;
+    }
+    break;
+  }
+  if (deque.empty()) {
+    throw SyntaxError(previous_token, "expected ("); // TODO rename error
+  }
+  deque.pop_back();
+
   lex->decrementTokenItern();
 }
 
@@ -72,8 +120,9 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
     } else if (currentToken->lexem == "--") {
       currentToken->lexem = "u--";
       _pushToDeque(currentToken, deque);
+    } else {
+      throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
     }
-    throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
   } else {
     _checkErrors(currentToken, previosToken);
     if (currentToken->type == Type::NUMBER || currentToken->type == Type::ID || currentToken->type == Type::LITERAL) {
@@ -111,6 +160,10 @@ void ExpParser::_addToPolis(Token* token) {
 }
 
 void ExpParser::_pushToDeque(Token* token, std::deque<Token*>& deque) {
+  if (token->lexem == "(") {
+    deque.push_back(token);
+    return;
+  }
   while (!deque.empty()) {
     if (_priorityTable.at(token->lexem) >= _priorityTable.at(deque.back()->lexem)) {
       polis.push_back(deque.back());

@@ -63,7 +63,14 @@ const std::vector<std::string> Lex::_operatorsList = {
   _addSleshes("/"),
   _addSleshes("-"),
   _addSleshes("+"),
-  _addSleshes("!")
+  _addSleshes("!"),
+  _addSleshes("="),
+  _addSleshes(">="),
+  _addSleshes("<="),
+  _addSleshes(">"),
+  _addSleshes("<"),
+  _addSleshes("^")
+
   
 };
 
@@ -81,8 +88,8 @@ const std::vector<std::string> Lex::_punctuationList = {
 const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {
    {Type::KEYWORD,     Lex::_MakeRegexTemplateByList(Lex::_keywordsList)},
    {Type::TYPE,        Lex::_MakeRegexTemplateByList(Lex::_typesList)},
-   {Type::OPERATOR,    Lex::_MakeRegexTemplateByList(Lex::_operatorsList)},
    {Type::PUNKTUATION, Lex::_MakeRegexTemplateByList(Lex::_punctuationList)},
+   {Type::OPERATOR,    Lex::_MakeRegexTemplateByList(Lex::_operatorsList)},
    {Type::ID,          R"(_*[a-zA-Z][_a-zA-Z0-9]*)"},  // put id regex - template
    {Type::NUMBER,      R"([0-9]+\.[0-9]+|[0-9]+)"}, // put number regex - template
    {Type::LITERAL,     R"(\"([^\"])*\")"}, // put literal regex - template
@@ -94,15 +101,17 @@ Lex::Lex(char * input) {
     _fullRegex += "(" + _typeTemplates[i]._template + ")" + (i == _typeTemplates.size() - 1 ? "" : "|");
   }
   //std::cout << _fullRegex;
-  if (input == 0) {
+  /*if (input == 0) {
       std::cout << "NO FILE";
       exit(0);
   }
-  std::string tmp = "";
-  while (*input != 0) {
+  */
+  std::string tmp = "code.txt";
+  /*while (*input != 0) {
       tmp += *input;
       ++input;
   }
+  */
   _file.open(_filePath + tmp);
   if (!_file.is_open()) {
       std::cout << "CRINGE FILE DRUJE";
@@ -115,6 +124,7 @@ Lex::Lex(char * input) {
     scan(line);
   }
   _file.close();
+  _nowToken = _tokens.begin();
 }
 
 Token* Lex::getNextToken() {

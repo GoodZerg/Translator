@@ -1,12 +1,4 @@
-if(a => 0) {
-	"aboba"
-}
+ui8 a = 0, b = 10, c, d = 100 + 100;
 
-for(monkey a; a**c; ++a) {}
-	qwe
-	
-while r
-123.123
+fn bb(si8 a = 10 * 10 - 5 / a(10 * 1235 ^ 34), ui128 _hh = 20, ui128 k )->void{}
 
-int whiler
-+++++++++++++++++++++
