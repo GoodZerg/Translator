@@ -16,22 +16,20 @@ void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 	while (token = lex->getNextToken(), token != nullptr) {
 		if (token->type == Type::KEYWORD) {
 			if (token->lexem == "fn") {
-				program->program.push_back(_parseFunction());
+				Token* token1 = _getNextToken();
+				Token* token2 = _getNextToken();
+				if (token1->type == Type::ID && token2->lexem == "::") {
+					program->program.push_back(_parseFunctionWithStruct(token));
+				} else {
+					lex->decrementTokenItern(2);
+					program->program.push_back(_parseFunction());
+				}
 			} else if (token->lexem == "struct") {
 				program->program.push_back(_parseStruct());
 			}
 		} else if (token->type == Type::TYPE) {
 			lex->decrementTokenItern();
 			program->program.push_back(_parseInit());
-		} else if (token->type == Type::ID) {
-			Token* token1 = _getNextToken();
-			Token* token2 = _getNextToken();
-			if (token1->lexem == "::" && token2->lexem == "fn") {
-				program->program.push_back(_parseFunctionWithStruct(token));
-			} else {
-				lex->decrementTokenItern(2);
-        throw SyntaxError(token, "unexpecte id");
-			}
 		}
 	}
 }

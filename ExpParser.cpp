@@ -69,7 +69,7 @@ ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
     }
     lex->decrementTokenItern();
   } else if (end_symbol == "init") {
-    while (currentToken = _getNextToken(), currentToken->lexem != "," && currentToken->lexem != ";") {
+    while (currentToken = _getNextToken(), (currentToken->lexem != "," || _brackets != 0) && currentToken->lexem != ";") {
       _detectAction(currentToken, previosToken, deque);
       previosToken = currentToken;
     }
@@ -116,6 +116,9 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
     if (currentToken->type == Type::NUMBER || currentToken->type == Type::ID || currentToken->type == Type::LITERAL) {
       _addToPolis(currentToken);
     } else if (currentToken->lexem == "~" || currentToken->lexem == "!" || currentToken->lexem == "(") {
+      if (currentToken->lexem == "(") {
+        ++_brackets;
+      }
       _pushToDeque(currentToken, deque);
     } else if (currentToken->lexem == "+") {
       currentToken->lexem = "u+";
@@ -150,8 +153,10 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
       _checkPrefix(currentToken, previosToken);
       _pushToDeque(currentToken, deque);
     } else if (currentToken->lexem == ")") {
+      --_brackets;
       _descentToBracket(currentToken, deque);
     } else if (currentToken->lexem == "(") {
+      ++_brackets;
       if (previosToken->type == Type::ID) {
         _pushToDeque(new Token{ Type::KEYWORD , "fn", 0, 0, nullptr }, deque);
         currentToken->type == Type::UNEXPECTED;
@@ -162,6 +167,7 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
     } else if (currentToken->lexem == "[") {
       currentToken->lexem = "[]";
       _pushToDeque(currentToken, deque);
+      _pushToDeque(new Token{ Type::PUNKTUATION , "(", 0, 0, nullptr }, deque);
     } else if (currentToken->type == Type::OPERATOR) {
       _pushToDeque(currentToken, deque);
     } else {
@@ -364,7 +370,7 @@ void ExpParser::_checkPrefix(Token* currentToken, Token* previosToken) {
 
 void ExpParser::_descentToIndex(Token* token, std::deque<Token*>& deque) {
   while (!deque.empty()) {
-    if (deque.back()->lexem != "[") {
+    if (deque.back()->lexem != "(") {
       polis.push_back(deque.back());
       deque.pop_back();
       continue;
@@ -374,7 +380,7 @@ void ExpParser::_descentToIndex(Token* token, std::deque<Token*>& deque) {
   if (deque.empty()) {
     throw SyntaxError(token, "expected ["); // TODO rename error
   }
-  deque.back()->lexem = "[]";
+  deque.pop_back();
 }
 
 void ExpParser::_descentToBracket(Token* token, std::deque<Token*>& deque) {
