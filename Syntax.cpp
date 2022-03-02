@@ -487,6 +487,16 @@ bool Syntax::_checkTypeStructInit(Token* token) {
 }
 
 bool Syntax::_checkSecondID(Token* token) {
+	if (!_checkTypeStructInit(token)) {
+		return false;
+	}
+
+	token = _getNextToken();
+	if (token->type == Type::ID) {
+		lex->decrementTokenItern();
+		return true;
+	}
+	lex->decrementTokenItern();
 	return false;
 }
 

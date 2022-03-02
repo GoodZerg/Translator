@@ -147,5 +147,32 @@ private:
 
   bool _checkTypeStructInit(Token* token);
   bool _checkSecondID(Token* token); //check next token is ID(Exp or TypeStructInit)
+
+  struct Variable;
+
+  struct TypeStruct {
+    std::string type;
+    std::vector<Variable*> stVariables;
+  };
+  static std::vector<TypeStruct*> _structsTable;
+
+  struct Variable {
+    TypeStruct* typest;
+    std::string name, type;
+  };
+  static std::vector<Variable*> _variablesTable;
+
+  struct Function {
+    TypeStruct* a;
+    std::string name, retType;
+    std::vector<Variable*> parameters;
+  };
+  static std::vector<Function*> _functionsTable;
+
+  struct SemanticTree {
+    std::vector<SemanticTree*> nodes;
+    std::vector<Variable*> localVariables;
+    SemanticTree* parent;
+  };
 };
 
