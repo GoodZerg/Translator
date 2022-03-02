@@ -483,6 +483,11 @@ Syntax::TReturn* Syntax::_parseReturn() {
 }
 
 bool Syntax::_checkTypeStructInit(Token* token) {
+	for (TypeStruct* elem : _structsTable) {
+		if (elem->type == token->lexem) {
+			return true;
+		}
+	}
 	return false;
 }
 
