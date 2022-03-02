@@ -144,5 +144,8 @@ private:
   TReturn* _parseReturn();
 
   TProgram* program;
+
+  bool _checkTypeStructInit(Token* token);
+  bool _checkSecondID(Token* token); //check next token is ID(Exp or TypeStructInit)
 };
 

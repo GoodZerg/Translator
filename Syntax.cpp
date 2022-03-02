@@ -27,7 +27,7 @@ void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 			} else if (token->lexem == "struct") {
 				program->program.push_back(_parseStruct());
 			}
-		} else if (token->type == Type::TYPE) {
+		} else if (token->type == Type::TYPE || _checkTypeStructInit(token)) {
 			lex->decrementTokenItern();
 			program->program.push_back(_parseInit());
 		}
@@ -55,7 +55,7 @@ Syntax::TType* Syntax::_parseType() {
 	TType* type = new TType();
 
 	Token* token = _getNextToken();
-	if(token->type != Type::TYPE) {
+	if(token->type != Type::TYPE && !_checkTypeStructInit(token)) {
 		throw SyntaxError(token, "expected type");
 	}
 
@@ -119,7 +119,7 @@ Syntax::TBlock* Syntax::_parseBlock() {
 			} else {
 				throw SyntaxError(token, "unexpected keyword");
 			}
-		} else if(token->type == Type::TYPE) {
+		} else if(token->type == Type::TYPE || _checkSecondID(token)) {
 			lex->decrementTokenItern();
 			block->nodes.push_back(_parseInit());
 		} else if(token->lexem == "}"){
@@ -235,7 +235,7 @@ Syntax::TFor* Syntax::_parseFor() {
 	}
 
 	token = _getNextToken();
-	if(token->type == Type::TYPE) {
+	if(token->type == Type::TYPE || _checkSecondID(token)) {
 		lex->decrementTokenItern();
 		tfor->init = _parseInit();
 	} else {
@@ -274,7 +274,7 @@ Syntax::TForEach* Syntax::_parseForEach() {
 	}
 
 	token = _getNextToken();
-	if(token->type == Type::TYPE) {
+	if(token->type == Type::TYPE || _checkTypeStructInit(token)) {
 		lex->decrementTokenItern();
 		tfor->type = _parseType();
 		token = _getNextToken();
@@ -358,7 +358,7 @@ void Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::string 
 	bool flag = true; // check default params
 	do {
 		token = _getNextToken();
-		if (token->type != Type::TYPE) {
+		if (token->type != Type::TYPE && !_checkTypeStructInit(token)) {
 			throw SyntaxError(token, "expected Type");
 		}
 		lex->decrementTokenItern();
@@ -417,7 +417,7 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	}
 	
 	token = _getNextToken();
-	if (token->type != Type::TYPE) {
+	if (token->type != Type::TYPE && !_checkTypeStructInit(token)){
 		throw SyntaxError(token, "expected Type");
 	}
 	lex->decrementTokenItern();
@@ -480,5 +480,13 @@ Syntax::TReturn* Syntax::_parseReturn() {
 
 	_parseExpression(treturn->exp, "exp");
 	return treturn;
+}
+
+bool Syntax::_checkTypeStructInit(Token* token) {
+	return false;
+}
+
+bool Syntax::_checkSecondID(Token* token) {
+	return false;
 }
 
