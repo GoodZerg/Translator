@@ -119,7 +119,7 @@ private:
       Token* name;
       Exp* exp;
   };
-  void _parseParameters(std::vector<_parameter*>& parameters, std::string end_symbol);
+  int64_t _parseParameters(std::vector<_parameter*>& parameters, std::string end_symbol);
 
   struct TFunction : TNode {
     Token* nameStruct = nullptr;
@@ -127,6 +127,7 @@ private:
     std::vector<_parameter*> parameters;
     TType* type;
     TBlock* body = nullptr;
+    int64_t indexStartDefault;
   };
   TFunction* _parseFunction(TFunction* function = nullptr);
 
@@ -143,36 +144,60 @@ private:
   };
   TReturn* _parseReturn();
 
-  TProgram* program;
+  TProgram* _program;
 
   bool _checkTypeStructInit(Token* token);
   bool _checkSecondID(Token* token); //check next token is ID(Exp or TypeStructInit)
 
   struct Variable;
+  struct Function;
 
   struct TypeStruct {
     std::string type;
     std::vector<Variable*> stVariables;
+    std::vector<Function*> stFunctions;
   };
   static std::vector<TypeStruct*> _structsTable;
+  TypeStruct* _findTypeStruct(std::string& type);
 
   struct Variable {
     TypeStruct* typest;
     std::string name, type;
+    Variable(std::string& name, std::string& type, TypeStruct* typest = nullptr) {
+      this->name = name;
+      this->type = type;
+      this->typest = typest;
+    }
   };
   static std::vector<Variable*> _variablesTable;
 
+  Variable* _castParametrToVariable(_parameter* parametr);
+
   struct Function {
-    TypeStruct* a;
+    TypeStruct* belongToStruct;
     std::string name, retType;
     std::vector<Variable*> parameters;
+    int64_t indexStartDefault;
+    Function(std::string& name, std::string& retType, int64_t indexStartDefault, TypeStruct* belongToStruct = nullptr) {
+      this->name = name;
+      this->retType = retType;
+      this->indexStartDefault = indexStartDefault;
+      this->belongToStruct = belongToStruct;
+    }
   };
   static std::vector<Function*> _functionsTable;
+  void _addFunctionToTable(TFunction* function);
+  void _findFunctionInTable(Function* function);
 
   struct SemanticTree {
     std::vector<SemanticTree*> nodes;
     std::vector<Variable*> localVariables;
     SemanticTree* parent;
+    SemanticTree(SemanticTree* parent = nullptr) {
+      this->parent = parent;
+    }
   };
+  
+  SemanticTree* _sRoot;
 };
 

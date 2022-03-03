@@ -2,7 +2,8 @@
 
 Syntax::Syntax(Lex* lex) {
   this->lex = lex;
-  program = new TProgram();
+  _program = new TProgram();
+	_sRoot = new SemanticTree();
   try {
   _parseGeneral();
   } catch (SyntaxError error) {
@@ -19,17 +20,17 @@ void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 				Token* token1 = _getNextToken();
 				Token* token2 = _getNextToken();
 				if (token1->type == Type::ID && token2->lexem == "::") {
-					program->program.push_back(_parseFunctionWithStruct(token));
+					_program->program.push_back(_parseFunctionWithStruct(token));
 				} else {
 					lex->decrementTokenItern(2);
-					program->program.push_back(_parseFunction());
+					_program->program.push_back(_parseFunction());
 				}
 			} else if (token->lexem == "struct") {
-				program->program.push_back(_parseStruct());
+				_program->program.push_back(_parseStruct());
 			}
 		} else if (token->type == Type::TYPE || _checkTypeStructInit(token)) {
 			lex->decrementTokenItern();
-			program->program.push_back(_parseInit());
+			_program->program.push_back(_parseInit());
 		}
 	}
 }
@@ -353,9 +354,10 @@ Syntax::TMatch* Syntax::_parseMatch() {
 }  
 
 // not completely finished (need using table) //
-void Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::string end_symbol) {
+int64_t Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::string end_symbol) {
 	Token* token;
 	bool flag = true; // check default params
+	int64_t index = 0;
 	do {
 		token = _getNextToken();
 		if (token->type != Type::TYPE && !_checkTypeStructInit(token)) {
@@ -370,19 +372,22 @@ void Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::string 
 		Token* name = token;
 		if (flag) {
 			token = _getNextToken();
-			if (token->lexem != "=") {
+			if (token->lexem == "=") {
 				flag = false;
 				parameters.push_back(new _parameter{ type, name, nullptr });
-				continue;
+				_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
 			}
+			++index;
 			parameters.push_back(new _parameter{ type, name, nullptr });
-			_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
+			continue;
 		} else {
 			parameters.push_back(new _parameter{ type, name, nullptr });
+			_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
 		}
 		token = _getNextToken();
 	} while (token->lexem == ",");
 	lex->decrementTokenItern();
+	return index;
 }
 
 // not completely finished (need using table) //
@@ -404,7 +409,7 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	token = _getNextToken();
 	if (token->lexem != ")") {
 		lex->decrementTokenItern();
-		_parseParameters(function->parameters, "fn");
+		function->indexStartDefault = _parseParameters(function->parameters, "fn");
 		token = _getNextToken();
 		if (token->lexem != ")") {
 			throw SyntaxError(token, "expected )");
@@ -422,6 +427,8 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	}
 	lex->decrementTokenItern();
 	function->type = _parseType();
+
+	_addFunctionToTable(function);
 
 	token = _getNextToken();
 	if (token->lexem == ";") {
@@ -503,5 +510,46 @@ bool Syntax::_checkSecondID(Token* token) {
 	}
 	lex->decrementTokenItern();
 	return false;
+}
+
+Syntax::TypeStruct* Syntax::_findTypeStruct(std::string& type) {
+	for (TypeStruct* elem : _structsTable) {
+		if (elem->type == type) {
+			return elem;
+		}
+	}
+	return nullptr;
+}
+
+Syntax::Variable* Syntax::_castParametrToVariable(_parameter* parametr) {
+	return new Variable(parametr->name->lexem, parametr->type->typrStr, _findTypeStruct(parametr->type->typrStr));
+}
+
+void Syntax::_findFunctionInTable(Function* function) {
+	for (Function* elem : _functionsTable) {
+		if (elem->belongToStruct == function->belongToStruct &&
+			elem->name == function->name &&
+			elem->parameters.size() == function->parameters.size()) {
+			for (size_t index = 0; index < elem->parameters.size(); ++index) {
+				if (elem->parameters[index]->type != function->parameters[index]->type) {
+					return;
+				}
+			}
+			throw 5; // TODO: create SemanticError class
+		}
+	}
+}
+
+void Syntax::_addFunctionToTable(TFunction* tFunction) {
+	Function* sFunction = new Function(tFunction->nameFunction->lexem, tFunction->type->typrStr, tFunction->indexStartDefault);
+	for (_parameter* elem : tFunction->parameters) {
+		sFunction->parameters.push_back(_castParametrToVariable(elem));
+	}
+	if (tFunction->nameStruct != nullptr) {
+		sFunction->belongToStruct = _findTypeStruct(tFunction->nameStruct->lexem);
+		sFunction->belongToStruct->stFunctions.push_back(sFunction);
+	}
+	_findFunctionInTable(sFunction);
+	_functionsTable.push_back(sFunction);
 }
 
