@@ -4,6 +4,7 @@ Syntax::Syntax(Lex* lex) {
   this->lex = lex;
   _program = new TProgram();
 	_sRoot = new SemanticTree();
+	_sCurrent = _sRoot;
   try {
   _parseGeneral();
   } catch (SyntaxError error) {
@@ -89,43 +90,45 @@ Syntax::TType* Syntax::_parseType() {
 
 Syntax::TBlock* Syntax::_parseBlock() {
 	TBlock* block = new TBlock();
-
+	_sCurrent->nodes.push_back(new SemanticTree(_sCurrent));
+	_sCurrent = _sCurrent->nodes.back();
 
 	Token* token = _getNextToken();
 	if(token->lexem != "{") {
 		throw SyntaxError(token, "expected {");
 	}
-	while(true) {
+
+	while (true) {
 		token = _getNextToken();
-		if(token->type == Type::KEYWORD) {
-			if(token->lexem == "if") {
+		if (token->type == Type::KEYWORD) {
+			if (token->lexem == "if") {
 				block->nodes.push_back(_parseIf());
-			} else if(token->lexem == "for") {
+			} else if (token->lexem == "for") {
 				block->nodes.push_back(_parseFor());
-			} else if(token->lexem == "while") {
+			} else if (token->lexem == "while") {
 				block->nodes.push_back(_parseWhile());
-			} else if(token->lexem == "match") {
+			} else if (token->lexem == "match") {
 				;						// TODO //
-			} else if(token->lexem == "foreach") {
+			} else if (token->lexem == "foreach") {
 				block->nodes.push_back(_parseForEach());
-			} else if(token->lexem == "return") {
+			} else if (token->lexem == "return") {
 				block->nodes.push_back(_parseReturn());
-			} else if(token->lexem == "read") {
+			} else if (token->lexem == "read") {
 				block->nodes.push_back(_parseRead());
-			} else if(token->lexem == "print") {
+			} else if (token->lexem == "print") {
 				block->nodes.push_back(_parsePrint());
-			} else if(token->lexem == "continue" || token->lexem == "break") {
+			} else if (token->lexem == "continue" || token->lexem == "break") {
 				lex->decrementTokenItern();
 				block->nodes.push_back(_parseSingleKeyWord());
 			} else {
 				throw SyntaxError(token, "unexpected keyword");
 			}
-		} else if(token->type == Type::TYPE || _checkSecondID(token)) {
+		} else if (token->type == Type::TYPE || _checkSecondID(token)) {
 			lex->decrementTokenItern();
 			block->nodes.push_back(_parseInit());
-		} else if(token->lexem == "}"){
+		} else if (token->lexem == "}") {
 			return block;
-		} else if(token->lexem == "{") {
+		} else if (token->lexem == "{") {
 			lex->decrementTokenItern();
 			block->nodes.push_back(_parseBlock());
 		} else {
@@ -136,7 +139,7 @@ Syntax::TBlock* Syntax::_parseBlock() {
 		}
 	}
 
-
+	_sCurrent = _sCurrent->parent;
   return block;
 }
 
@@ -156,6 +159,8 @@ Syntax::TInit* Syntax::_parseInit() {
 		}
 		Token* name = token;
 		token = _getNextToken();
+		_checkVariableExistance(_sCurrent, name->lexem, init->type->typrStr);
+
 		if (token->lexem == ",") {
 			init->variables.push_back(new TInit::_variable{ name, nullptr });
 			continue;
@@ -359,17 +364,21 @@ int64_t Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::stri
 	bool flag = true; // check default params
 	int64_t index = 0;
 	do {
-		token = _getNextToken();
+		/*token = _getNextToken();
 		if (token->type != Type::TYPE && !_checkTypeStructInit(token)) {
 			throw SyntaxError(token, "expected Type");
 		}
 		lex->decrementTokenItern();
+		*/
 		TType* type = _parseType();
 		token = _getNextToken();
 		if (token->type != Type::ID) {
 			throw SyntaxError(token, "expected id");
 		}
 		Token* name = token;
+
+		_checkVariableExistance(_sCurrent, name->lexem, type->typrStr);
+
 		if (flag) {
 			token = _getNextToken();
 			if (token->lexem == "=") {
@@ -432,7 +441,7 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 
 	token = _getNextToken();
 	if (token->lexem == ";") {
-		return function; // TODO add in table that function not definition
+		return function;
 	}
 	lex->decrementTokenItern();
 	function->body = _parseBlock();
@@ -538,6 +547,24 @@ void Syntax::_findFunctionInTable(Function* function) {
 			throw 5; // TODO: create SemanticError class
 		}
 	}
+}
+
+void Syntax::_addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& type) {
+	tree->localVariables.push_back(new Variable(name, type, _findTypeStruct(type)));
+}
+
+void Syntax::_addVariableToTable() {
+
+}
+
+void Syntax::_checkVariableExistance(SemanticTree* tree, std::string& name, std::string& type) {
+	for (Variable* elem : tree->localVariables) {
+		if (elem->name == name) {
+			throw 6; // TODO: create SemanticError class
+		}
+	}
+	_addVariableToSemanticTree(tree, name, type);
+	//_addVariableToTable();
 }
 
 void Syntax::_addFunctionToTable(TFunction* tFunction) {

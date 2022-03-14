@@ -198,6 +198,9 @@ private:
     }
   };
   
-  SemanticTree* _sRoot;
+  SemanticTree* _sRoot,* _sCurrent;
+  void _addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& type);
+  void _addVariableToTable();
+  void _checkVariableExistance(SemanticTree* tree, std::string& name, std::string& type);
 };
 
