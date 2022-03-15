@@ -157,7 +157,8 @@ private:
     std::vector<Variable*> stVariables;
     std::vector<Function*> stFunctions;
   };
-  static std::vector<TypeStruct*> _structsTable;
+
+  std::vector<TypeStruct*> _structsTable;
   TypeStruct* _findTypeStruct(std::string& type);
 
   struct Variable {
@@ -169,8 +170,8 @@ private:
       this->typest = typest;
     }
   };
-  static std::vector<Variable*> _variablesTable;
 
+  std::vector<Variable*> _variablesTable ;
   Variable* _castParametrToVariable(_parameter* parametr);
 
   struct Function {
@@ -178,14 +179,16 @@ private:
     std::string name, retType;
     std::vector<Variable*> parameters;
     int64_t indexStartDefault;
-    Function(std::string& name, std::string& retType, int64_t indexStartDefault, TypeStruct* belongToStruct = nullptr) {
+    bool isImplemented;
+    Function(std::string& name, std::string& retType, int64_t indexStartDefault, bool isImplemented = false, TypeStruct* belongToStruct = nullptr) {
       this->name = name;
       this->retType = retType;
       this->indexStartDefault = indexStartDefault;
       this->belongToStruct = belongToStruct;
+      this->isImplemented = isImplemented;
     }
   };
-  static std::vector<Function*> _functionsTable;
+  std::vector<Function*> _functionsTable;
   void _addFunctionToTable(TFunction* function);
   void _findFunctionInTable(Function* function);
 
@@ -202,5 +205,8 @@ private:
   void _addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& type);
   void _addVariableToTable();
   void _checkVariableExistance(SemanticTree* tree, std::string& name, std::string& type);
+
+  typedef SyntaxError SemanticError;
+
 };
 

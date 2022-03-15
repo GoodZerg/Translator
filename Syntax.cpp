@@ -1,5 +1,7 @@
 #include "Syntax.h"
 
+#define _SemanticError(massedge) SemanticError((lex->decrementTokenItern(), lex->getNextToken()), massedge);
+
 Syntax::Syntax(Lex* lex) {
   this->lex = lex;
   _program = new TProgram();
@@ -358,7 +360,6 @@ Syntax::TMatch* Syntax::_parseMatch() {
   return nullptr;
 }  
 
-// not completely finished (need using table) //
 int64_t Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::string end_symbol) {
 	Token* token;
 	bool flag = true; // check default params
@@ -399,7 +400,6 @@ int64_t Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::stri
 	return index;
 }
 
-// not completely finished (need using table) //
 Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	if (function == nullptr) {
 		function = new TFunction();
@@ -441,6 +441,7 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 
 	token = _getNextToken();
 	if (token->lexem == ";") {
+		function->body = nullptr;
 		return function;
 	}
 	lex->decrementTokenItern();
@@ -455,7 +456,6 @@ Syntax::TFunction* Syntax::_parseFunctionWithStruct(Token* name) {
 	return _parseFunction(function);
 }
 
-// not completely finished (need using table) //
 Syntax::TStruct* Syntax::_parseStruct() {
 	TStruct* tstruct = new TStruct();
 	Token* token = _getNextToken();
@@ -544,7 +544,8 @@ void Syntax::_findFunctionInTable(Function* function) {
 					return;
 				}
 			}
-			throw 5; // TODO: create SemanticError class
+			if(elem->isImplemented == false) continue;
+			throw _SemanticError("ambiguous definition");
 		}
 	}
 }
@@ -560,7 +561,7 @@ void Syntax::_addVariableToTable() {
 void Syntax::_checkVariableExistance(SemanticTree* tree, std::string& name, std::string& type) {
 	for (Variable* elem : tree->localVariables) {
 		if (elem->name == name) {
-			throw 6; // TODO: create SemanticError class
+			throw _SemanticError("double variable definition");
 		}
 	}
 	_addVariableToSemanticTree(tree, name, type);
@@ -576,6 +577,7 @@ void Syntax::_addFunctionToTable(TFunction* tFunction) {
 		sFunction->belongToStruct = _findTypeStruct(tFunction->nameStruct->lexem);
 		sFunction->belongToStruct->stFunctions.push_back(sFunction);
 	}
+	if(tFunction->body != nullptr) sFunction->isImplemented = true;
 	_findFunctionInTable(sFunction);
 	_functionsTable.push_back(sFunction);
 }
