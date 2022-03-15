@@ -1,6 +1,6 @@
 #include "Syntax.h"
 
-#define _SemanticError(massedge) SemanticError((lex->decrementTokenItern(), lex->getNextToken()), massedge);
+#define _SemanticError(message) SemanticError((lex->decrementTokenItern(), lex->getNextToken()), message);
 
 Syntax::Syntax(Lex* lex) {
   this->lex = lex;
@@ -145,9 +145,9 @@ Syntax::TBlock* Syntax::_parseBlock() {
   return block;
 }
 
-// TODO //
 void Syntax::_parseExpression(Exp*& exp, std::string end_symbol) {
 	exp = new Exp(lex, end_symbol);
+	
 }
 
 Syntax::TInit* Syntax::_parseInit() {

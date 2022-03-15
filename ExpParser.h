@@ -21,6 +21,7 @@ private:
   void _descentToIndex(Token* token, std::deque<Token*>& deque);
   void _descentToBracket(Token* token, std::deque<Token*>& deque);
 
+
   Lex* _lex;
   const static std::map<std::string, int64_t> _priorityTable;
   int64_t _brackets = 0;
