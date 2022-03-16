@@ -465,13 +465,13 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 		_sCurrent = _sCurrent->parent;
 		_flagOfSemantic = true;
 		function->body = nullptr;
-		_addFunctionToTable(function);
+		_addFunctionToTable(function, function->nameFunction);
 		return function;
 	}
 	lex->decrementTokenItern();
 	function->body = _parseBlock();
 
-	_addFunctionToTable(function);
+	_addFunctionToTable(function, function->nameFunction);
 
 	return function;
 }
@@ -587,7 +587,7 @@ Syntax::Variable* Syntax::_castParametrToVariable(_parameter* parametr) {
 	return new Variable(parametr->name->lexem, parametr->type->typrStr, _findTypeStruct(parametr->type->typrStr));
 }
 
-void Syntax::_findFunctionInTable(Function* function) {
+void Syntax::_findFunctionInTable(Function* function, Token* errorPoint) {
 	for (Function* elem : _functionsTable) {
 		if (elem->belongToStruct == function->belongToStruct &&
 			elem->name == function->name &&
@@ -601,12 +601,15 @@ void Syntax::_findFunctionInTable(Function* function) {
 				if (function->isImplemented == true) {
 					continue;
 				}
-				throw _SemanticError("double prototype");
+				//throw _SemanticError("double prototype");
+				throw SemanticError(errorPoint, "double prototype");
 			}
 			if (function->isImplemented == true) {
-				throw _SemanticError("ambiguous definition");
+				//throw _SemanticError("ambiguous definition");
+				throw SemanticError(errorPoint, "ambiguous definition");
 			}
-			throw _SemanticError("re-declaration");
+			//throw _SemanticError("re-declaration");
+			throw SemanticError(errorPoint, "re-declaration");
 		}
 	}
 }
@@ -636,7 +639,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 	std::cout << "\n";
 }
 
-void Syntax::_addFunctionToTable(TFunction* tFunction) {
+void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {
 	Function* sFunction = new Function(tFunction->nameFunction->lexem, tFunction->type->typrStr, tFunction->indexStartDefault);
 	for (_parameter* elem : tFunction->parameters) {
 		sFunction->parameters.push_back(_castParametrToVariable(elem));
@@ -644,14 +647,15 @@ void Syntax::_addFunctionToTable(TFunction* tFunction) {
 	if (tFunction->nameStruct != nullptr) {
 		sFunction->belongToStruct = _findTypeStruct(tFunction->nameStruct->lexem);
 		if (sFunction->belongToStruct == nullptr) {
-			throw _SemanticError("impossible struct"); // TODO rename error
+			//throw _SemanticError("impossible struct");
+			throw SemanticError(errorPoint, "undefined struct");
 		}
 		sFunction->belongToStruct->stFunctions.push_back(sFunction);
 	}
 	if (tFunction->body != nullptr) {
 		sFunction->isImplemented = true;
 	}
-	_findFunctionInTable(sFunction);
+	_findFunctionInTable(sFunction, errorPoint);
 	_functionsTable.push_back(sFunction);
 }
 

@@ -190,8 +190,8 @@ private:
     }
   };
   std::vector<Function*> _functionsTable;
-  void _addFunctionToTable(TFunction* function);
-  void _findFunctionInTable(Function* function);
+  void _addFunctionToTable(TFunction* function, Token* errorPoint = nullptr);
+  void _findFunctionInTable(Function* function, Token* errorPoint = nullptr);
 
   struct SemanticTree {
     std::vector<SemanticTree*> nodes;
