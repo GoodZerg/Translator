@@ -1,22 +1,29 @@
 ui8 a = 0, b = 10, c, d = 100 + 100;
 
-struct a <char b = 10 * 10, string f = ++c > 17>;
+struct a <char b = 10 * 10, string f = ++c >;
 
-fn bb(si8 a = 10 * 10 - 5 / a(10 * 1235 ^ 34), ui128 _hh = 20, ui128 k )->void{
+fn bb(si8 a = 10 * 10 - 5 / a(10 * 1235 ^ 34), ui128 _hh = 20, ui128 k = 14)->void{
 	string b;
 	if (a > 10 * 10) {
 	while (d + 5 == 123 & d) {
 		for(f32 a = 10; b < 10; ++b++){
-			foreach( a -> **b) {}
+			foreach( j -> **b) {}
 		}
 	}
 	} else {
 	f32 b;
 	}
+	a g;
 }
-
 fn a::b() -> void;
+fn a::b() -> void {}
+fn ll(ui8 g) -> void;
+fn ll(ui8 g) -> void {}
+struct b<>;
+fn b::g() -> a;
+fn b::g() -> a {};
+struct ha<ui8 g = 5>;
+struct nice<ha h>;
+si8 g = b(5,1) + &c - (*c * d) + a[10 ^ 10 / 20];
 
-si8 a = b(5,1) + &c - (*c * d) + a[10 ^ 10 / 20];
-
-si8 b = a[100];
+si8 k = a[100 + 50];

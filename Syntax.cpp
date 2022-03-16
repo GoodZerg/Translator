@@ -23,7 +23,7 @@ void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 				Token* token1 = _getNextToken();
 				Token* token2 = _getNextToken();
 				if (token1->type == Type::ID && token2->lexem == "::") {
-					_program->program.push_back(_parseFunctionWithStruct(token));
+					_program->program.push_back(_parseFunctionWithStruct(token1));
 				} else {
 					lex->decrementTokenItern(2);
 					_program->program.push_back(_parseFunction());
@@ -92,14 +92,17 @@ Syntax::TType* Syntax::_parseType() {
 
 Syntax::TBlock* Syntax::_parseBlock() {
 	TBlock* block = new TBlock();
-	_sCurrent->nodes.push_back(new SemanticTree(_sCurrent));
-	_sCurrent = _sCurrent->nodes.back();
+	if (_flagOfSemantic) {
+		_sCurrent->nodes.push_back(new SemanticTree(_sCurrent));
+		_sCurrent = _sCurrent->nodes.back();
+	}
+	_flagOfSemantic = true;
 
 	Token* token = _getNextToken();
 	if(token->lexem != "{") {
 		throw SyntaxError(token, "expected {");
 	}
-
+	
 	while (true) {
 		token = _getNextToken();
 		if (token->type == Type::KEYWORD) {
@@ -129,6 +132,8 @@ Syntax::TBlock* Syntax::_parseBlock() {
 			lex->decrementTokenItern();
 			block->nodes.push_back(_parseInit());
 		} else if (token->lexem == "}") {
+			_sCurrent = _sCurrent->parent;
+			_flagOfSemantic = true;
 			return block;
 		} else if (token->lexem == "{") {
 			lex->decrementTokenItern();
@@ -142,15 +147,17 @@ Syntax::TBlock* Syntax::_parseBlock() {
 	}
 
 	_sCurrent = _sCurrent->parent;
+	_flagOfSemantic = true;
   return block;
 }
 
 void Syntax::_parseExpression(Exp*& exp, std::string end_symbol) {
 	exp = new Exp(lex, end_symbol);
-	
+	_validatePolis(exp->polis);
 }
 
 Syntax::TInit* Syntax::_parseInit() {
+
 	TInit* init = new TInit();
 	init->type = _parseType();
 
@@ -209,7 +216,6 @@ Syntax::TIf* Syntax::_parseIf() {
 		lex->decrementTokenItern();
 		return tif;
 	}
-
 	tif->elseBody = _parseBlock();
 
 	return tif;
@@ -236,6 +242,10 @@ Syntax::TWhile* Syntax::_parseWhile() {
 
 Syntax::TFor* Syntax::_parseFor() {
 	TFor* tfor = new TFor();
+
+	_sCurrent->nodes.push_back(new SemanticTree(_sCurrent));
+	_sCurrent = _sCurrent->nodes.back();
+	_flagOfSemantic = false;
 
 	Token* token = _getNextToken();
 	if(token->lexem != "(") {
@@ -275,6 +285,10 @@ Syntax::TFor* Syntax::_parseFor() {
 
 Syntax::TForEach* Syntax::_parseForEach() {
 	TForEach* tfor = new TForEach();
+
+	_sCurrent->nodes.push_back(new SemanticTree(_sCurrent));
+	_sCurrent = _sCurrent->nodes.back();
+	_flagOfSemantic = false;
 
 	Token* token = _getNextToken();
 	if(token->lexem != "(") {
@@ -386,15 +400,20 @@ int64_t Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::stri
 				flag = false;
 				parameters.push_back(new _parameter{ type, name, nullptr });
 				_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
+				token = _getNextToken(); 
+				continue;
 			}
 			++index;
 			parameters.push_back(new _parameter{ type, name, nullptr });
-			continue;
 		} else {
+			token = _getNextToken();
+			if (token->lexem != "=") {
+				throw SyntaxError(token, "expected =");
+			}
 			parameters.push_back(new _parameter{ type, name, nullptr });
 			_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
+			token = _getNextToken();
 		}
-		token = _getNextToken();
 	} while (token->lexem == ",");
 	lex->decrementTokenItern();
 	return index;
@@ -404,6 +423,10 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	if (function == nullptr) {
 		function = new TFunction();
 	}
+
+	_sCurrent->nodes.push_back(new SemanticTree(_sCurrent));
+	_sCurrent = _sCurrent->nodes.back();
+	_flagOfSemantic = false;
 
 	Token* token = _getNextToken();
 	if (token->type != Type::ID) {
@@ -432,20 +455,23 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	
 	token = _getNextToken();
 	if (token->type != Type::TYPE && !_checkTypeStructInit(token)){
-		throw SyntaxError(token, "expected Type");
+		throw SyntaxError(token, "undefined type");
 	}
 	lex->decrementTokenItern();
 	function->type = _parseType();
 
-	_addFunctionToTable(function);
-
 	token = _getNextToken();
 	if (token->lexem == ";") {
+		_sCurrent = _sCurrent->parent;
+		_flagOfSemantic = true;
 		function->body = nullptr;
+		_addFunctionToTable(function);
 		return function;
 	}
 	lex->decrementTokenItern();
 	function->body = _parseBlock();
+
+	_addFunctionToTable(function);
 
 	return function;
 }
@@ -453,20 +479,34 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 Syntax::TFunction* Syntax::_parseFunctionWithStruct(Token* name) {
 	TFunction* function = new TFunction();
 	function->nameStruct = name;
+	if (_findTypeStruct(name->lexem) == nullptr) {
+		throw _SemanticError("undefined struct");
+	}
 	return _parseFunction(function);
 }
 
 Syntax::TStruct* Syntax::_parseStruct() {
 	TStruct* tstruct = new TStruct();
+
+	_sCurrent->nodes.push_back(new SemanticTree(_sCurrent));
+	_sCurrent = _sCurrent->nodes.back();
+	_flagOfSemantic = false;
+
 	Token* token = _getNextToken();
 	if (token->type != Type::ID) {
 		throw SyntaxError(token, "expected id");
 	}
 
 	tstruct->name = token; // TODO add to table
-	
+	if (_findTypeStruct(tstruct->name->lexem) != nullptr) {
+		throw _SemanticError("double definiton struct");
+	}
+
 	token = _getNextToken();
 	if (token->lexem == ";") {
+		_flagOfSemantic = true;
+		_sCurrent = _sCurrent->parent;
+		// TODO prototype of struct
 		return tstruct;
 	}
 
@@ -483,10 +523,15 @@ Syntax::TStruct* Syntax::_parseStruct() {
 		}
 	}
 
+	_addStructToTable(tstruct);
+
 	token = _getNextToken();
 	if (token->lexem != ";") {
 		throw SyntaxError(token, "expected ;");
 	}
+
+	_flagOfSemantic = true;
+	_sCurrent = _sCurrent->parent;
 
 	return tstruct;
 }
@@ -530,6 +575,14 @@ Syntax::TypeStruct* Syntax::_findTypeStruct(std::string& type) {
 	return nullptr;
 }
 
+void Syntax::_addStructToTable(TStruct* tstruct) {
+	_structsTable.push_back(new TypeStruct());
+	_structsTable.back()->type = tstruct->name->lexem;
+	for (_parameter* elem : tstruct->parameters) {
+		_structsTable.back()->stVariables.push_back(_castParametrToVariable(elem));
+	}
+}
+
 Syntax::Variable* Syntax::_castParametrToVariable(_parameter* parametr) {
 	return new Variable(parametr->name->lexem, parametr->type->typrStr, _findTypeStruct(parametr->type->typrStr));
 }
@@ -544,8 +597,16 @@ void Syntax::_findFunctionInTable(Function* function) {
 					return;
 				}
 			}
-			if(elem->isImplemented == false) continue;
-			throw _SemanticError("ambiguous definition");
+			if (elem->isImplemented == false) {
+				if (function->isImplemented == true) {
+					continue;
+				}
+				throw _SemanticError("double prototype");
+			}
+			if (function->isImplemented == true) {
+				throw _SemanticError("ambiguous definition");
+			}
+			throw _SemanticError("re-declaration");
 		}
 	}
 }
@@ -568,6 +629,13 @@ void Syntax::_checkVariableExistance(SemanticTree* tree, std::string& name, std:
 	//_addVariableToTable();
 }
 
+void Syntax::_validatePolis(std::vector<Token*>& exp) {
+	for (Token* elem : exp) {
+		std::cout << elem->lexem << " ";
+	}
+	std::cout << "\n";
+}
+
 void Syntax::_addFunctionToTable(TFunction* tFunction) {
 	Function* sFunction = new Function(tFunction->nameFunction->lexem, tFunction->type->typrStr, tFunction->indexStartDefault);
 	for (_parameter* elem : tFunction->parameters) {
@@ -575,9 +643,14 @@ void Syntax::_addFunctionToTable(TFunction* tFunction) {
 	}
 	if (tFunction->nameStruct != nullptr) {
 		sFunction->belongToStruct = _findTypeStruct(tFunction->nameStruct->lexem);
+		if (sFunction->belongToStruct == nullptr) {
+			throw _SemanticError("impossible struct"); // TODO rename error
+		}
 		sFunction->belongToStruct->stFunctions.push_back(sFunction);
 	}
-	if(tFunction->body != nullptr) sFunction->isImplemented = true;
+	if (tFunction->body != nullptr) {
+		sFunction->isImplemented = true;
+	}
 	_findFunctionInTable(sFunction);
 	_functionsTable.push_back(sFunction);
 }

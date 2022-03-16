@@ -160,6 +160,7 @@ private:
 
   std::vector<TypeStruct*> _structsTable;
   TypeStruct* _findTypeStruct(std::string& type);
+  void _addStructToTable(TStruct* tstruct);
 
   struct Variable {
     TypeStruct* typest;
@@ -208,5 +209,7 @@ private:
 
   typedef SyntaxError SemanticError;
 
+  void _validatePolis(std::vector<Token*>& exp);
+  bool _flagOfSemantic = true;
 };
 

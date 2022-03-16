@@ -91,7 +91,7 @@ ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
     }
     lex->decrementTokenItern();
   }
-  // TODO check code in pastebin
+
   deque.push_front(new Token{ Type::PUNKTUATION , "(", 0, 0, nullptr });
 
   while (!deque.empty()) {
@@ -107,8 +107,6 @@ ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
     throw SyntaxError(previosToken, "expected ("); // TODO rename error
   }
   deque.pop_back();
-
-  
 
   lex->decrementTokenItern();
 }
