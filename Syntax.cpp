@@ -639,6 +639,46 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 		std::cout << elem->lexem << " ";
 	}
 	std::cout << "\n";
+
+	struct polisType {
+		std::string* type;
+		bool isType;
+		polisType(std::string* type, bool isType){
+			this->type = type;
+			this->isType = isType;
+		}
+	};
+	std::stack<std::vector<polisType*>> polisStack;
+
+	for (Token* elem : exp) {
+		if (elem->type == Type::ID) {
+			polisStack.push(std::vector<polisType*>(1, new polisType(&elem->lexem, false)));
+		} else if (elem->type == Type::LITERAL) {
+			polisStack.push(std::vector<polisType*>(1, new polisType(new std::string("string"), true)));
+		} else if (elem->type == Type::NUMBER) {
+			polisStack.push(std::vector<polisType*>(1, new polisType(_checkNumberType(elem->lexem), true)));
+		} else if (elem->type == Type::OPERATOR) {
+			if (elem->lexem == "fn") {
+
+			} else if (elem->lexem[0] == 's') {
+
+			} else if (elem->lexem[0] == 'p') {
+
+			} else if (elem->lexem[0] == 'b') {
+
+			}
+		}
+	}
+	
+}
+
+std::string* Syntax::_checkNumberType(std::string& type) {
+	for (char& elem : type) {
+		if (elem == '.') {
+			return new std::string("f128");
+		}
+	}
+	return new std::string("ui128");
 }
 
 void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {

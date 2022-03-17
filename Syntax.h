@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ExpParser.h"
-
+#include <stack>
 class Syntax {
 public:
   Syntax(Lex* lex);
@@ -211,5 +211,8 @@ private:
 
   void _validatePolis(std::vector<Token*>& exp);
   bool _flagOfSemantic = true;
+
+  std::string* _checkNumberType(std::string& type);
+  
 };
 
