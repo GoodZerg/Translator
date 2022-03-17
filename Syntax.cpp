@@ -660,11 +660,11 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 		} else if (elem->type == Type::OPERATOR) {
 			if (elem->lexem == "fn") {
 
-			} else if (elem->lexem[0] == 's') {
+			} else if (elem->lexem == "s++") {
 
 			} else if (elem->lexem[0] == 'p') {
 
-			} else if (elem->lexem[0] == 'b') {
+			} else if (elem->lexem[0] == 'u') {
 
 			}
 		}
