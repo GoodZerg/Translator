@@ -1,46 +1,46 @@
 #include "ExpParser.h"
 
 const std::map<std::string, int64_t> ExpParser::_priorityTable = {
-  {"fn", 0}, //done
-  {"s++", 1},//done
-  {"s--", 1}, //done
-  {".", 1}, //done
-  {"[]", 1}, //done
-  {"p++", 2}, //done
-  {"p--", 2}, //done
-  {"u+", 2}, //done
-  {"u-", 2}, //done
-  {"!", 2}, //done
-  {"~", 2}, //done
-  {"u*", 2}, //done
-  {"u&", 2}, //done
-  {"^", 3}, //done
-  {"b*", 4}, //done
-  {"/", 4}, //done
-  {"%", 4}, //done
-  {"b+", 5}, //done
-  {"b-", 5}, //done
-  {">", 6}, //done
-  {"<", 6}, //done
-  {">=", 6}, //done
-  {"<=", 6}, //done
-  {"==", 7}, //done
-  {"!=", 7}, //done
-  {"b&", 8}, //done
-  {"|", 9}, //done
-  {"and", 10}, //done
-  {"or", 11}, //done
-  {"+=", 12}, //done
-  {"-=", 12}, //done
-  {"*=", 12}, //done
-  {"/=", 12}, //done
-  {"%=", 12}, //done
-  {"&=", 12}, //done
-  {"|=", 12}, //done
-  {"^=", 12}, //done
-  {"=", 12}, //done
-  {",", 13}, //done
-  {"(", 14}//done
+  {"fn", 0},  //done +
+  {"s++", 1}, //done + +
+  {"s--", 1}, //done + +
+  {".", 1},   //done +
+  {"[]", 1},  //done +
+  {"p++", 2}, //done + +
+  {"p--", 2}, //done + +
+  {"u+", 2},  //done + +
+  {"u-", 2},  //done + +
+  {"!", 2},   //done +
+  {"~", 2},   //done +
+  {"u*", 2},  //done + +
+  {"u&", 2},  //done + +
+  {"^", 3},   //done +
+  {"b*", 4},  //done +
+  {"/", 4},   //done +
+  {"%", 4},   //done +
+  {"b+", 5},  //done +
+  {"b-", 5},  //done +
+  {">", 6},   //done +
+  {"<", 6},   //done +
+  {">=", 6},  //done +
+  {"<=", 6},  //done +
+  {"==", 7},  //done +
+  {"!=", 7},  //done +
+  {"b&", 8},  //done +
+  {"|", 9},   //done +
+  {"and", 10},//done + +
+  {"or", 11}, //done + +
+  {"+=", 12}, //done +
+  {"-=", 12}, //done +
+  {"*=", 12}, //done +
+  {"/=", 12}, //done +
+  {"%=", 12}, //done +
+  {"&=", 12}, //done +
+  {"|=", 12}, //done +
+  {"^=", 12}, //done +
+  {"=", 12},  //done +
+  {",", 13},  //done +
+  {"(", 14}   //done -
 };
 
 ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {

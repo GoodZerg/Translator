@@ -213,6 +213,9 @@ private:
   bool _flagOfSemantic = true;
 
   std::string* _checkNumberType(std::string& type);
+  std::string* _findVariableinTree(std::string* name, bool& isStruct);
+  std::string* __findVariableinTree(std::string* name, SemanticTree* node, bool& isStruct);
+  void _checkIsPointRef(std::string* name, bool& point, bool& ref);
   
 };
 

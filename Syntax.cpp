@@ -2,6 +2,14 @@
 
 #define _SemanticError(message) SemanticError((lex->decrementTokenItern(), lex->getNextToken()), message);
 
+#define __polisStackTopWPop() [&]() -> std::vector<polisType*> {\
+auto ahah = polisStack.top();\
+polisStack.pop();\
+return ahah;\
+}
+
+#define _polisStackTopWPop() __polisStackTopWPop()()
+
 Syntax::Syntax(Lex* lex) {
   this->lex = lex;
   _program = new TProgram();
@@ -642,30 +650,95 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 
 	struct polisType {
 		std::string* type;
-		bool isType;
-		polisType(std::string* type, bool isType){
+		bool isType, isPointer, isReference, isStruct;
+		polisType(std::string* type, bool isType = false , bool isPointer = false, bool isReference = false, bool isStruct = false) {
 			this->type = type;
 			this->isType = isType;
+			this->isPointer = isPointer;
+			this->isReference = isReference;
+			this->isStruct = isStruct;
 		}
 	};
 	std::stack<std::vector<polisType*>> polisStack;
 
 	for (Token* elem : exp) {
 		if (elem->type == Type::ID) {
-			polisStack.push(std::vector<polisType*>(1, new polisType(&elem->lexem, false)));
+			polisStack.push(std::vector<polisType*>(1, new polisType(&elem->lexem)));
 		} else if (elem->type == Type::LITERAL) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(new std::string("string"), true)));
 		} else if (elem->type == Type::NUMBER) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(_checkNumberType(elem->lexem), true)));
 		} else if (elem->type == Type::OPERATOR) {
-			if (elem->lexem == "fn") {
+			if (elem->lexem[0] == 's' || elem->lexem[0] == 'p' || elem->lexem[0] == 'u') {
+				std::vector<polisType*> firstOperand = _polisStackTopWPop();
+				if(firstOperand.back()->isType == false) {
+					firstOperand.back()->isType = true;
+					firstOperand.back()->type =  _findVariableinTree(firstOperand.back()->type, firstOperand.back()->isStruct);
+					if(firstOperand.back()->type == nullptr) {
+						throw SemanticError(elem, "unknown variable");
+					}
+					_checkIsPointRef(firstOperand.back()->type, firstOperand.back()->isPointer, firstOperand.back()->isReference);
+				}
+				if(firstOperand.back()->type->c_str() == "string") {
+					throw SemanticError(elem, "u operation with string");
+					// мы это проверяем потому что хоть на синтаксисе мы не можем это сделать, но если операция применяеться 
+					// к функции и она возвращает стринг мы сосем
+				}
+				if(elem->lexem == "u-") {
+					if(firstOperand.back()->isPointer || firstOperand.back()->isReference) {
+						throw SemanticError(elem, "u- with pointer/ref");
+					}
+				}
+				if(elem->lexem == "u*") {
+					if(firstOperand.back()->isPointer == false) {
+						throw SemanticError(elem, "try to dereference a non-pointer");
+					}
+				}
+			} else if(elem->lexem[0] == '!' || elem->lexem[0] == '~') {
+				std::vector<polisType*> firstOperand = _polisStackTopWPop();
+				// lase unar
 
-			} else if (elem->lexem == "s++") {
+			} else {
+				std::vector<polisType*> firstOperand = _polisStackTopWPop(); 
+				std::vector<polisType*> secondOperand = _polisStackTopWPop();
+				
+				if(elem->lexem == "fn") {
 
-			} else if (elem->lexem[0] == 'p') {
+				} else if(elem->lexem == "[]") {
 
-			} else if (elem->lexem[0] == 'u') {
+				} else if(elem->lexem == ".") {
 
+				} else if(elem->lexem == ",") {
+
+				} else {
+					
+					if(elem->lexem == ">" || elem->lexem == "<" || elem->lexem == "==" ||
+						elem->lexem == ">=" || elem->lexem == "<=" || elem->lexem == "!=") {
+						//comparisons
+
+					} else if(elem->lexem == "b&" || elem->lexem == "|") {
+						//binary bit operations
+
+					} else if(elem->lexem == "&=" || elem->lexem == "|=") {
+						//assignment binary bit operations
+					} else if(elem->lexem == "b+" || elem->lexem == "b-" || elem->lexem == "b*" ||
+						elem->lexem == "/" || elem->lexem == "%" || elem->lexem == "^"  ) {
+						//binary operations
+					} else if(elem->lexem == "+=" || elem->lexem == "-=" || elem->lexem == "*=" ||
+						elem->lexem == "/=" || elem->lexem == "%=" || elem->lexem == "^=") {
+						//assignment binary operations
+					} else if(elem->lexem == "or" || elem->lexem == "and") {
+						//logical
+						
+						// все true что не 0/""/0.0
+						if(firstOperand.back()->type->c_str() == "void" || secondOperand.back()->type->c_str() == "void") {
+							throw SemanticError(elem, "cannot convert to logical");
+						}
+					} else if(elem->lexem == "=") {
+						//assigment
+					}
+					
+				}
 			}
 		}
 	}
@@ -679,6 +752,34 @@ std::string* Syntax::_checkNumberType(std::string& type) {
 		}
 	}
 	return new std::string("ui128");
+}
+
+std::string* Syntax::_findVariableinTree(std::string* name, bool& isStruct) {
+	return __findVariableinTree(name, _sCurrent, isStruct);
+}
+
+std::string* Syntax::__findVariableinTree(std::string* name, SemanticTree* node, bool& isStruct) {
+	for(Variable* elem : node->localVariables) {
+		if(elem->name == *name) {
+			return &(elem->typest != nullptr ? (isStruct = true, elem->typest->type) : elem->type);
+		}
+	}
+	if(node->parent == nullptr) {
+		return nullptr;
+	}
+	__findVariableinTree(name, node->parent, isStruct);
+}
+
+void Syntax::_checkIsPointRef(std::string* name, bool& point, bool& ref) {
+	for(char elem : *name) {
+		if(elem == '*') {
+			point = true;
+		}
+		if(elem == '&') {
+			ref = true;
+		}
+	}
+	return;
 }
 
 void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {
