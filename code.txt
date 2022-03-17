@@ -16,7 +16,7 @@ fn bb(si8 a = 10 * 10 - 5 / a(10 * 1235 ^ 34), ui128 _hh = 20, ui128 k = 14)->vo
 	a g;
 }
 fn a::b() -> void;
-fn a::b() -> void;
+fn a::b() -> void {};
 fn ll(ui8 g) -> void;
 fn ll(ui8 g) -> void {}
 struct b<>;
@@ -27,3 +27,10 @@ struct nice<ha h>;
 si8 g = b(5,1) + &c - (*c * d) + a[10 ^ 10 / 20];
 
 si8 k = a[100 + 50];
+
+string f = "helloworld";
+si8 hhhh;
+fn main() -> void {
+hhhh = a.b(100,10) + 10, 10;
+si8 mm = 10;
+}

@@ -142,6 +142,7 @@ Syntax::TBlock* Syntax::_parseBlock() {
 			lex->decrementTokenItern();
 			Exp* exp = nullptr;
 			_parseExpression(exp, "exp");
+			_getNextToken();
 			block->nodes.push_back(new TExp{ exp });
 		}
 	}
@@ -263,13 +264,14 @@ Syntax::TFor* Syntax::_parseFor() {
 		if (token->lexem != ";") {
 			throw SyntaxError(token, "expected ;");
 		}
-	}
+}
 	
 	_parseExpression(tfor->exp2, "exp");
 	token = _getNextToken();
 	if(token->lexem != ";") {
 		throw SyntaxError(token, "expected ;");
 	}
+	
 
 	_parseExpression(tfor->exp3, "if");
 
