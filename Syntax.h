@@ -216,6 +216,8 @@ private:
   std::string* _findVariableinTree(std::string* name, bool& isStruct);
   std::string* __findVariableinTree(std::string* name, SemanticTree* node, bool& isStruct);
   void _checkIsPointRef(std::string* name, bool& point, bool& ref);
-  
+  std::string* _findVariableInStruct(std::string& type, std::string& variable);
+  Function* _findFunctionInStruct(std::string& type, std::string& function);
+  Function* _findFunctionInTable(std::string& function);
 };
 

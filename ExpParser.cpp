@@ -1,4 +1,4 @@
-#include "ExpParser.h"
+﻿#include "ExpParser.h"
 
 const std::map<std::string, int64_t> ExpParser::_priorityTable = {
   {"fn", 0},  //done +
@@ -40,7 +40,7 @@ const std::map<std::string, int64_t> ExpParser::_priorityTable = {
   {"^=", 12}, //done +
   {"=", 12},  //done +
   {",", 13},  //done +
-  {"(", 14}   //done -
+  {"(", 14}   //done 🤡
 };
 
 ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
