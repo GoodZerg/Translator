@@ -10,6 +10,11 @@ return ahah;\
 
 #define _polisStackTopWPop() __polisStackTopWPop()()
 
+std::map<std::string, std::vector<std::string>> Syntax::_castsTable = {
+	{"", {"",""}},
+	{"", {"",""}},
+};
+
 Syntax::Syntax(Lex* lex) {
   this->lex = lex;
   _program = new TProgram();
@@ -42,6 +47,8 @@ void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 		} else if (token->type == Type::TYPE || _checkTypeStructInit(token)) {
 			lex->decrementTokenItern();
 			_program->program.push_back(_parseInit());
+		} else {
+			throw SyntaxError(token, "unexpected expression");
 		}
 	}
 }
@@ -648,18 +655,6 @@ void Syntax::_checkVariableExistance(SemanticTree* tree, std::string& name, std:
 }
 
 void Syntax::_validatePolis(std::vector<Token*>& exp) {
-	struct polisType {
-		std::string* type;
-		bool isType, isPointer, isReference, isStruct;
-		polisType(std::string* type, bool isType = false , bool isPointer = false, 
-					bool isReference = false, bool isStruct = false) {
-			this->type = type;
-			this->isType = isType;
-			this->isPointer = isPointer;
-			this->isReference = isReference;
-			this->isStruct = isStruct;
-		}
-	};
 	std::stack<std::vector<polisType*>> polisStack;
 
 	for (size_t i = 0; i < exp.size(); ++i) {
@@ -673,15 +668,8 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 		} else if (elem->type == Type::OPERATOR) {
 			if (elem->lexem[0] == 's' || elem->lexem[0] == 'p' || elem->lexem[0] == 'u') {
 				std::vector<polisType*> firstOperand = _polisStackTopWPop();
-				if(firstOperand.back()->isType == false) {
-					firstOperand.back()->isType = true;
-					firstOperand.back()->type =  _findVariableinTree(firstOperand.back()->type, firstOperand.back()->isStruct);
-					if(firstOperand.back()->type == nullptr) {
-						throw SemanticError(elem, "unknown variable");
-					}
-					_checkIsPointRef(firstOperand.back()->type, firstOperand.back()->isPointer, firstOperand.back()->isReference);
-				}
-				if(firstOperand.back()->type->c_str() == "string") {
+				_transformVariableToType(firstOperand.back(), elem);
+				if(*firstOperand.back()->type == "string") {
 					throw SemanticError(elem, "u operation with string");
 					// мы это проверяем потому что хоть на синтаксисе мы не можем это сделать, но если операция применяеться 
 					// к функции и она возвращает стринг мы сосем
@@ -707,14 +695,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					Function* function = nullptr;
 					if (i + 1 < exp.size() && exp[i]->lexem[0] == '.') {
 						std::vector<polisType*> thirdOperand = _polisStackTopWPop();
-						if (thirdOperand.back()->isType == false) {
-							thirdOperand.back()->isType = true;
-							thirdOperand.back()->type = _findVariableinTree(thirdOperand.back()->type, thirdOperand.back()->isStruct);
-							if (thirdOperand.back()->type == nullptr) {
-								throw SemanticError(elem, "unknown variable");
-							}
-							_checkIsPointRef(thirdOperand.back()->type, thirdOperand.back()->isPointer, thirdOperand.back()->isReference);
-						}
+						_transformVariableToType(thirdOperand.back(), elem);
 						if (thirdOperand.back()->isStruct == false) {
 							throw SemanticError(elem, "not a struct"); // TODO rename error
 						}
@@ -737,14 +718,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					_checkIsPointRef(retType->type, retType->isPointer, retType->isReference);
 					polisStack.push(std::vector<polisType*>(1, retType));
 				} else {
-					if (secondOperand.back()->isType == false) {
-						secondOperand.back()->isType = true;
-						secondOperand.back()->type = _findVariableinTree(secondOperand.back()->type, secondOperand.back()->isStruct);
-						if (secondOperand.back()->type == nullptr) {
-							throw SemanticError(elem, "unknown variable");
-						}
-						_checkIsPointRef(secondOperand.back()->type, secondOperand.back()->isPointer, secondOperand.back()->isReference);
-					}
+					_transformVariableToType(secondOperand.back(), elem);
 					if (elem->lexem == "[]") {
 
 					} else if (elem->lexem == ".") {
@@ -766,9 +740,11 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					} else if (elem->lexem == ",") {
 
 					} else {
+						_transformVariableToType(firstOperand.back(), elem);
+						if (elem->lexem == "==" || elem->lexem == "!=") {
 
-						if (elem->lexem == ">" || elem->lexem == "<" || elem->lexem == "==" ||
-							elem->lexem == ">=" || elem->lexem == "<=" || elem->lexem == "!=") {
+						} else if (elem->lexem == ">" || elem->lexem == "<" ||
+							elem->lexem == ">=" || elem->lexem == "<=") {
 							//comparisons
 
 						} else if (elem->lexem == "b&" || elem->lexem == "|") {
@@ -779,6 +755,11 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 						} else if (elem->lexem == "b+" || elem->lexem == "b-" || elem->lexem == "b*" ||
 							elem->lexem == "/" || elem->lexem == "%" || elem->lexem == "^") {
 							//binary operations
+							if (elem->lexem == "b-") {
+								if (firstOperand.back()->isPointer && secondOperand.back()->isPointer) {
+									;
+								}
+							}
 						} else if (elem->lexem == "+=" || elem->lexem == "-=" || elem->lexem == "*=" ||
 							elem->lexem == "/=" || elem->lexem == "%=" || elem->lexem == "^=") {
 							//assignment binary operations
@@ -786,7 +767,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 							//logical
 
 							// все true что не 0/""/0.0
-							if (firstOperand.back()->type->c_str() == "void" || secondOperand.back()->type->c_str() == "void") {
+							if (*firstOperand.back()->type == "void" || *secondOperand.back()->type == "void") {
 								throw SemanticError(elem, "cannot convert to logical");
 							}
 						} else if (elem->lexem == "=") {
@@ -797,7 +778,6 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 			}
 		}
 	}
-	
 }
 
 std::string* Syntax::_checkNumberType(std::string& type) {
@@ -856,6 +836,54 @@ Syntax::Function* Syntax::_findFunctionInTable(std::string& function) {
 	}
 
 	return nullptr;
+}
+
+void Syntax::_castTypes(polisType& first, std::string& second, Token* error) {
+}
+
+std::string* Syntax::_getTypeWithoutPointAndRef(std::string* type) {
+	std::string* rettype = new std::string("");
+	for (char elem : *type) {
+		if (elem == '*' || elem == '&') {
+			return rettype;
+		}
+		*rettype += elem;
+	}
+	return rettype;
+}
+
+void Syntax::_transformVariableToType(polisType* operand, Token* error) {
+	if (operand->isType == false) {
+		operand->isType = true;
+		operand->type = _findVariableinTree(operand->type, operand->isStruct);
+		if (operand->type == nullptr) {
+			throw SemanticError(error, "unknown variable");
+		}
+		_checkIsPointRef(operand->type, operand->isPointer, operand->isReference);
+	}
+}
+
+void Syntax::_castTypes(polisType& first, polisType& second, Token* error) {
+	if (first.isStruct || second.isStruct) {
+		throw SemanticError(error, "can't casts type struct");
+	}
+	if (first.isPointer && second.isPointer) {
+			throw SemanticError(error, "can't casts pointers");
+	}
+	if (first.isPointer) {
+
+	} else if (second.isPointer) {
+
+	} else {
+		std::string* first_= _getTypeWithoutPointAndRef(first.type);
+		std::string* second_ = _getTypeWithoutPointAndRef(second.type);
+		for (std::string& elem : _castsTable[*first_]) {
+			if (elem == *second_) {
+				delete first_, second_;
+				return;
+			}
+		}
+	}
 }
 
 Syntax::Function* Syntax::_findFunctionInStruct(std::string& type, std::string& function) {

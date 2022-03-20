@@ -158,7 +158,7 @@ private:
     std::vector<Function*> stFunctions;
   };
 
-  std::vector<TypeStruct*> _structsTable;
+  std::vector<TypeStruct*> _structsTable = {};
   TypeStruct* _findTypeStruct(std::string& type);
   void _addStructToTable(TStruct* tstruct);
 
@@ -212,6 +212,19 @@ private:
   void _validatePolis(std::vector<Token*>& exp);
   bool _flagOfSemantic = true;
 
+  struct polisType {
+    std::string* type;
+    bool isType, isPointer, isReference, isStruct;
+    polisType(std::string* type, bool isType = false, bool isPointer = false,
+      bool isReference = false, bool isStruct = false) {
+      this->type = type;
+      this->isType = isType;
+      this->isPointer = isPointer;
+      this->isReference = isReference;
+      this->isStruct = isStruct;
+    }
+  };
+
   std::string* _checkNumberType(std::string& type);
   std::string* _findVariableinTree(std::string* name, bool& isStruct);
   std::string* __findVariableinTree(std::string* name, SemanticTree* node, bool& isStruct);
@@ -219,5 +232,10 @@ private:
   std::string* _findVariableInStruct(std::string& type, std::string& variable);
   Function* _findFunctionInStruct(std::string& type, std::string& function);
   Function* _findFunctionInTable(std::string& function);
+  void _castTypes(polisType& first, polisType& second, Token* error);
+  void _castTypes(polisType& first, std::string& second, Token* error);
+  std::string* _getTypeWithoutPointAndRef(std::string* type);
+  void _transformVariableToType(polisType* operand, Token* elem);
+  static std::map<std::string, std::vector<std::string>> _castsTable;
 };
 
