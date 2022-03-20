@@ -11,8 +11,12 @@ return ahah;\
 #define _polisStackTopWPop() __polisStackTopWPop()()
 
 std::map<std::string, std::vector<std::string>> Syntax::_castsTable = {
-	{"", {"",""}},
-	{"", {"",""}},
+	{"signed", {"",""}},
+	{"unsigned", {"",""}},
+	{"float", {"",""}},
+	{"char", {"",""}},
+	{"string", {"",""}},
+	{"void", {}}
 };
 
 Syntax::Syntax(Lex* lex) {
@@ -780,20 +784,39 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 	}
 }
 
+void Syntax::_trasformToBaseType(std::string* name) {
+	// all types now is float, signed, unsigned, string, char, void
+	std::string* type = _getTypeWithoutPointAndRef(name);
+	if        (*type == "si8" || *type == "si16" || *type == "si32" || *type == "si64" || *type == "si128") {
+		*type = "signed";
+	} else if (*type == "ui8" || *type == "ui16" || *type == "ui32" || *type == "ui64" || *type == "ui128") {
+		*type = "unsigned";
+	} else if (*type == "f32" || *type == "f64" || *type == "f128") {
+		*type = "float";
+	}
+	std::string pointRef = "";
+	for(char i : *name) {
+		if(i == '*' || i == '&') {
+			pointRef += i;
+		}
+	}
+	*name = *type + pointRef;
+}
+
 std::string* Syntax::_checkNumberType(std::string& type) {
 	for (char& elem : type) {
 		if (elem == '.') {
-			return new std::string("f128");
+			return new std::string("float");
 		}
 	}
-	return new std::string("ui128");
+	return new std::string("unsigned");
 }
 
-std::string* Syntax::_findVariableinTree(std::string* name, bool& isStruct) {
-	return __findVariableinTree(name, _sCurrent, isStruct);
+std::string* Syntax::_findVariableInTree(std::string* name, bool& isStruct) {
+	return __findVariableInTree(name, _sCurrent, isStruct);
 }
 
-std::string* Syntax::__findVariableinTree(std::string* name, SemanticTree* node, bool& isStruct) {
+std::string* Syntax::__findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct) {
 	for(Variable* elem : node->localVariables) {
 		if(elem->name == *name) {
 			return &(elem->typest != nullptr ? (isStruct = true, elem->type) : elem->type);
@@ -802,7 +825,7 @@ std::string* Syntax::__findVariableinTree(std::string* name, SemanticTree* node,
 	if(node->parent == nullptr) {
 		return nullptr;
 	}
-	return __findVariableinTree(name, node->parent, isStruct);
+	return __findVariableInTree(name, node->parent, isStruct);
 }
 
 void Syntax::_checkIsPointRef(std::string* name, bool& point, bool& ref) {
@@ -838,6 +861,8 @@ Syntax::Function* Syntax::_findFunctionInTable(std::string& function) {
 	return nullptr;
 }
 
+
+// TODO???
 void Syntax::_castTypes(polisType& first, std::string& second, Token* error) {
 }
 
@@ -855,11 +880,12 @@ std::string* Syntax::_getTypeWithoutPointAndRef(std::string* type) {
 void Syntax::_transformVariableToType(polisType* operand, Token* error) {
 	if (operand->isType == false) {
 		operand->isType = true;
-		operand->type = _findVariableinTree(operand->type, operand->isStruct);
+		operand->type = _findVariableInTree(operand->type, operand->isStruct);
 		if (operand->type == nullptr) {
 			throw SemanticError(error, "unknown variable");
 		}
 		_checkIsPointRef(operand->type, operand->isPointer, operand->isReference);
+		_trasformToBaseType(operand->type);
 	}
 }
 

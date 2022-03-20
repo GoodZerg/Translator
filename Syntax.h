@@ -226,8 +226,8 @@ private:
   };
 
   std::string* _checkNumberType(std::string& type);
-  std::string* _findVariableinTree(std::string* name, bool& isStruct);
-  std::string* __findVariableinTree(std::string* name, SemanticTree* node, bool& isStruct);
+  std::string* _findVariableInTree(std::string* name, bool& isStruct);
+  std::string* __findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct);
   void _checkIsPointRef(std::string* name, bool& point, bool& ref);
   std::string* _findVariableInStruct(std::string& type, std::string& variable);
   Function* _findFunctionInStruct(std::string& type, std::string& function);
@@ -236,6 +236,9 @@ private:
   void _castTypes(polisType& first, std::string& second, Token* error);
   std::string* _getTypeWithoutPointAndRef(std::string* type);
   void _transformVariableToType(polisType* operand, Token* elem);
+  void _trasformToBaseType(std::string* name);
+
+
   static std::map<std::string, std::vector<std::string>> _castsTable;
 };
 
