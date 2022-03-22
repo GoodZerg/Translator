@@ -759,6 +759,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 								if (*second_ != "signed" && *second_ != "unsigned") {
 									throw SemanticError(elem, "can't casts pointer");
 								}
+								delete second_;
 							} else {
 								if (!(*firstOperand.back()->type == "string" && *secondOperand.back()->type == "string")) {
 									_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
@@ -766,16 +767,45 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 							}
 						} else if (elem->lexem == "b-") {
 							if (firstOperand.back()->isPointer && secondOperand.back()->isPointer) {
-								;
+								int64_t firstNumberOfStars = _countingNumberOfStars(firstOperand.back()->type);
+								int64_t secondNumberOfStars = _countingNumberOfStars(secondOperand.back()->type);
+								if (firstNumberOfStars != secondNumberOfStars) {
+									throw SemanticError(elem, "can't casts pointers with differnce deepth");
+								}
+								std::string* first_ = _getTypeWithoutPointAndRef(firstOperand.back()->type);
+								std::string* second_ = _getTypeWithoutPointAndRef(secondOperand.back()->type);
+								if (*first_ != *second_) {
+									throw SemanticError(elem, "can't casts pointers on different types");
+								}
+								delete first_, second_;
+							} else if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
+								if (secondOperand.back()->isPointer) {
+									swap(*firstOperand.back(), *secondOperand.back());
+								}
+								std::string* second_ = _getTypeWithoutPointAndRef(secondOperand.back()->type);
+								if (*second_ != "signed" && *second_ != "unsigned") {
+									throw SemanticError(elem, "can't casts pointer");
+								}
+								delete second_;
+							} else {
+								_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
 							}
 						} else if (elem->lexem == "%") {
 							if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
-								throw SemanticError(elem, "can't cast pointer");
+								throw SemanticError(elem, "can't casts pointer");
 							}
+							std::string* first_ = _getTypeWithoutPointAndRef(firstOperand.back()->type);
+							std::string* second_ = _getTypeWithoutPointAndRef(secondOperand.back()->type);
+							if (*first_ == "double" || *second_ == "double") {
+								throw SemanticError(elem, "can't % double");
+							}
+							delete first_, second_;
+							_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
 						} else if (elem->lexem == "b*" || elem->lexem == "/" || elem->lexem == "^") {
 							if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
 								throw SemanticError(elem, "can't cast pointer");
 							}
+							_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
 						} else if (elem->lexem == "+=" || elem->lexem == "-=" || elem->lexem == "*=" ||
 							elem->lexem == "/=" || elem->lexem == "%=" || elem->lexem == "^=") {
 							//assignment binary operations
@@ -813,6 +843,7 @@ void Syntax::_transformToBaseType(std::string* name) {
 		}
 	}
 	*name = *type + pointRef;
+	delete type;
 }
 
 std::string* Syntax::_checkNumberType(std::string& type) {
@@ -929,6 +960,7 @@ void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Toke
 		*first.type = "bool";
 		first.type = false;
 	}
+	delete first_, second_;
 }
 
 Syntax::Function* Syntax::_findFunctionInStruct(std::string& type, std::string& function) {
@@ -959,5 +991,13 @@ void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {
 	}
 	_findFunctionInTable(sFunction, errorPoint);
 	_functionsTable.push_back(sFunction);
+}
+
+int64_t Syntax::_countingNumberOfStars(std::string* type) {
+	int64_t answer = 0;
+	for (char elem : *type) {
+		answer += elem == '*' ? 1 : 0;
+	}
+	return answer;
 }
 

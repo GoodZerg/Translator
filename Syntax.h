@@ -245,5 +245,6 @@ private:
   std::string* _getTypeWithoutPointAndRef(std::string* type);
   void _transformVariableToType(polisType* operand, Token* elem);
   void _transformToBaseType(std::string* name);
+  int64_t _countingNumberOfStars(std::string* type); // Deep of pointer type
 };
 
