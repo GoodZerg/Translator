@@ -223,6 +223,14 @@ private:
       this->isReference = isReference;
       this->isStruct = isStruct;
     }
+
+    friend void swap(polisType& first, polisType& second) {
+      std::swap(first.type, second.type);
+      std::swap(first.isPointer, second.isPointer);
+      std::swap(first.isReference, second.isReference);
+      std::swap(first.isStruct, second.isStruct);
+      std::swap(first.isType, second.isType);
+    }
   };
 
   std::string* _checkNumberType(std::string& type);
@@ -232,13 +240,10 @@ private:
   std::string* _findVariableInStruct(std::string& type, std::string& variable);
   Function* _findFunctionInStruct(std::string& type, std::string& function);
   Function* _findFunctionInTable(std::string& function);
-  void _castTypes(polisType& first, polisType& second, Token* error);
-  void _castTypes(polisType& first, std::string& second, Token* error);
+  void _castTypesBinaryOperation(polisType& first, polisType& second, Token* error);
+  void _castSpecialType(polisType& first, std::string& second, Token* error);
   std::string* _getTypeWithoutPointAndRef(std::string* type);
   void _transformVariableToType(polisType* operand, Token* elem);
-  void _trasformToBaseType(std::string* name);
-
-
-  static std::map<std::string, std::vector<std::string>> _castsTable;
+  void _transformToBaseType(std::string* name);
 };
 
