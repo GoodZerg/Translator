@@ -231,6 +231,22 @@ private:
       std::swap(first.isStruct, second.isStruct);
       std::swap(first.isType, second.isType);
     }
+    void clear() {
+      delete this->type;
+      this->type = nullptr;
+      this->isType = false;
+      this->isPointer = false;
+      this->isReference = false;
+      this->isStruct = false;
+    }
+    void clear(std::string* type) {
+      delete this->type;
+      this->type = type;
+      this->isType = true;
+      this->isPointer = false;
+      this->isReference = false;
+      this->isStruct = false;
+    }
   };
 
   std::string* _checkNumberType(std::string& type);
@@ -246,5 +262,6 @@ private:
   void _transformVariableToType(polisType* operand, Token* elem);
   void _transformToBaseType(std::string* name);
   int64_t _countingNumberOfStars(std::string* type); // Deep of pointer type
+  void _castPointersType(polisType& first, polisType& second, Token* error);
 };
 
