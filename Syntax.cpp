@@ -831,10 +831,11 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 							_castSpecialType(*secondOperand.back(), "bool", elem);
 						} else if (elem->lexem == "=") {
 							if (*firstOperand.back()->type == *secondOperand.back()->type) {
-
-							}
-							if (firstOperand.back()->isPointer && secondOperand.back()->isPointer) {
+								;
+							} else if (firstOperand.back()->isPointer && secondOperand.back()->isPointer) {
 								_castPointersType(*firstOperand.back(), *secondOperand.back(), elem);
+							} else {
+
 							}
 						}
 					}
