@@ -257,7 +257,7 @@ private:
   Function* _findFunctionInStruct(std::string& type, std::string& function);
   Function* _findFunctionInTable(std::string& function);
   void _castTypesBinaryOperation(polisType& first, polisType& second, Token* error);
-  void _castSpecialType(polisType& first, std::string& second, Token* error);
+  void _castSpecialType(polisType& first, std::string second, Token* error);
   std::string* _getTypeWithoutPointAndRef(std::string* type);
   void _transformVariableToType(polisType* operand, Token* elem);
   void _transformToBaseType(std::string* name);

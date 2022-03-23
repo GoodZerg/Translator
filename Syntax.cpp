@@ -755,14 +755,23 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 						} else if (elem->lexem == ">" || elem->lexem == "<" ||
 							elem->lexem == ">=" || elem->lexem == "<=") {
 							if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
-								throw SemanticError(elem, "can't casts pointer in comparisons");
+								throw SemanticError(elem, "can't cast pointer in comparisons");
 							} else {
 								_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
 							}
 							firstOperand.back()->clear(new std::string("bool"));
 						} else if (elem->lexem == "b&" || elem->lexem == "|") {
-							//binary bit operations
-
+							if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
+								throw SemanticError(elem, "can't cast pointer in bits operations");
+							} else if (*firstOperand.back()->type == "float" || *secondOperand.back()->type == "float") {
+								throw SemanticError(elem, "can't cast float in bits operations");
+							} else if (*firstOperand.back()->type == "unsigned" || *secondOperand.back()->type == "unsigned") {
+								_castSpecialType(*firstOperand.back(), "unsigned", elem);
+								_castSpecialType(*secondOperand.back(), "unsigned", elem);
+							} else {
+								_castSpecialType(*firstOperand.back(), "signed", elem);
+								_castSpecialType(*secondOperand.back(), "signed", elem);
+							}
 						} else if (elem->lexem == "&=" || elem->lexem == "|=") {
 							//assignment binary bit operations
 						} else if (elem->lexem == "b+") {
@@ -818,14 +827,15 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 							elem->lexem == "/=" || elem->lexem == "%=" || elem->lexem == "^=") {
 							//assignment binary operations
 						} else if (elem->lexem == "or" || elem->lexem == "and") {
-							//logical
-
-							// все true что не 0/""/0.0
-							if (*firstOperand.back()->type == "void" || *secondOperand.back()->type == "void") {
-								throw SemanticError(elem, "cannot convert to logical");
-							}
+							_castSpecialType(*firstOperand.back(), "bool", elem);
+							_castSpecialType(*secondOperand.back(), "bool", elem);
 						} else if (elem->lexem == "=") {
-							//assigment
+							if (*firstOperand.back()->type == *secondOperand.back()->type) {
+
+							}
+							if (firstOperand.back()->isPointer && secondOperand.back()->isPointer) {
+								_castPointersType(*firstOperand.back(), *secondOperand.back(), elem);
+							}
 						}
 					}
 				}
@@ -912,14 +922,22 @@ Syntax::Function* Syntax::_findFunctionInTable(std::string& function) {
 	return nullptr;
 }
 
-void Syntax::_castSpecialType(polisType& first, std::string& second, Token* error) {
-	if (first.isStruct) {
+void Syntax::_castSpecialType(polisType& first, std::string second, Token* error) {
+	if (first.isStruct && !first.isPointer) {
 		throw SemanticError(error, "can't cast struct type");
 	}
 	if (second == "bool") {
-		*first.type = "bool";
-		first.isPointer = false;
-
+		first.clear(new std::string("bool"));
+	} else if (second == "signed") {
+		first.clear(new std::string("signed"));
+	} else if (second == "unsigned") {
+		first.clear(new std::string("unsigned"));
+	} else if (second == "char") {
+		first.clear(new std::string("char"));
+	} else if (second == "float") {
+		first.clear(new std::string("float"));
+	} else {
+		throw SemanticError(error, "can't cast");
 	}
 }
 
