@@ -219,7 +219,7 @@ private:
     int64_t points;
     bool isType, isReference, isStruct;
 
-    polisType(std::string* type, bool isType = false);
+    polisType(std::string* type, bool isType = false, bool isReference = true);
 
     void countAndRemovePoints();
     void countBitSize();
