@@ -1,35 +1,35 @@
-ui8 a = 0, b = 10, c, d = 100 + 100;
+ui32* a = 0;
+ui32 b = 10, c, d = 100 + 100;
+struct j <char b = 10 * 10, string f = "123" >;
 
-struct a <char b = 10 * 10, string f = ++c >;
-
-fn bb(si8 a = 10 * 10 - 5 / a(10 * 1235 ^ 34), ui128 _hh = 20, ui128 k = 14)->void{
-	string b;
-	if (a > 10 * 10) {
-	while (d + 5 == 123 & d) {
-		for(f32 a = 10; b < 10; ++b++){
-			foreach( j -> **b) {}
-		}
-	}
-	} else {
-	f32 b;
-	}
-	a g;
+fn bb(si32 a = 10 * 10 - 5, ui128 _hh = 20, ui128 k = 14)->void{
+    si32 b;
+    if (a > 10 * 10) {
+    while (d + 5 == 123 & d) {
+        for(f32 a = 10; b < 10; b++){
+            foreach(j h -> b) {}
+        }
+    }
+    } else {
+    f32 b;
+    }
+    j g;
 }
-fn a::b() -> void;
-fn a::b() -> void {}
-fn ll(ui8 g) -> void;
-fn ll(ui8 g) -> void {}
+fn j::b() -> void;
+fn j::b() -> void {}
+fn ll(ui32 g) -> void;
+fn ll(ui32 g) -> void {}
 struct b<>;
-fn b::g() -> a;
-fn b::g() -> a {}
-struct ha<ui8 g = 5>;
+fn j::g() -> j;
+fn j::g() -> j {}
+struct ha<f32 g = 5>;
 struct nice<ha h>;
-si8 g = b(5,1) + &c - (*c * d) + a[10 ^ 10 / 20];
+f64 g = &c - (c * d) + a[10 ^ 10 / 20];
 
-si8 k = a[100 + 50];
+f128 k = a[100 + 50];
 
 string f = "helloworld";
-si8 hhhh;
+si32 hhhh;
 fn main() -> void {
 hhhh = a.b(100 / 100,10 * 22 / 7 ^ 6, 76 * 7, (4 + 5, 8) + 5, 45) + 10, 10;
 a.b(1, 2, 3, (4, 5), 6);
@@ -38,5 +38,3 @@ a.b(123);
 }
 a* lll = 5;
 si8****** kk = 5;
-
-

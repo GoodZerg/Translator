@@ -183,7 +183,7 @@ void Syntax::_parseExpression(Exp*& exp, std::string end_symbol) {
 	}
 	std::cout << "\n";
 
-	//_validatePolis(exp->polis);
+	_validatePolis(exp->polis);
 }
 
 Syntax::TInit* Syntax::_parseInit() {
@@ -341,6 +341,7 @@ Syntax::TForEach* Syntax::_parseForEach() {
 	if(token->lexem != "->") {
 		throw SyntaxError(token, "expected ->");
 	}
+	
 	_parseExpression(tfor->exp1, "if");
 	
 	token = _getNextToken();
@@ -665,9 +666,9 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 	for (size_t i = 0; i < exp.size(); ++i) {
 		Token* elem = exp[i];
 		if (elem->type == Type::ID) {
-			polisStack.push(std::vector<polisType*>(1, new polisType(&elem->lexem)));
+			polisStack.push(std::vector<polisType*>(1, new polisType(elem->lexem)));
 		} else if (elem->type == Type::LITERAL) {
-			polisStack.push(std::vector<polisType*>(1, new polisType(new std::string("string"), true, false)));
+			polisStack.push(std::vector<polisType*>(1, new polisType("string", true, false)));
 		} else if (elem->type == Type::NUMBER) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(_checkNumberType(elem->lexem), true, false)));
 		} else if (elem->type == Type::OPERATOR) {
@@ -762,7 +763,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 						throw SemanticError(elem, "undefined function"); // TODO rename error
 					}
 					// TODO hurt in ass(подстановка аргументов)
-					polisType* retType = new polisType(&function->retType, true);
+					polisType* retType = new polisType(function->retType, true);
 					polisStack.push(std::vector<polisType*>(1, retType));
 					continue;
 
@@ -770,6 +771,8 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					secondOp->transformVariableToType(elem);
 					if (elem->lexem == "[]") {
 						firstOp->transformVariableToType(elem);
+						std::cout << *secondOp->type << "//////////\n";
+						std::cout << secondOp->points << "//////////\n";
 						if (!secondOp->points) {
 							throw SemanticError(elem, "try to index not-pointer type");
 						}
@@ -782,6 +785,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 						_castSpecialType(*firstOp, "signed", elem);
 						*firstOp = *secondOp;
 						firstOp->points--;
+						std::cout << *firstOp->type << "//////////\n";
 					} else if (elem->lexem == ".") {
 						if (secondOp->isStruct == false) {
 							throw SemanticError(elem, "not a struct"); // TODO rename error
@@ -815,12 +819,12 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 									swap(*firstOp, *secondOp);
 								}
 								if (*secondOp->type != "signed" && *secondOp->type != "unsigned") {
-									throw SemanticError(elem, "can't casts pointer");
+									throw SemanticError(elem, "can't cast pointer");
 								}
 							} else if (!(*firstOp->type == "string" && *secondOp->type == "string")) {
 								_castTypesBinaryOperation(*firstOp, *secondOp, elem);
 							}
-							firstOp->clear(new std::string("bool"));
+							firstOp->clear("bool");
 						} else if (elem->lexem == ">" || elem->lexem == "<" ||
 							elem->lexem == ">=" || elem->lexem == "<=") {
 							if (firstOp->points || secondOp->points) {
@@ -828,7 +832,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 							} else {
 								_castTypesBinaryOperation(*firstOp, *secondOp, elem);
 							}
-							firstOp->clear(new std::string("bool"));
+							firstOp->clear("bool");
 						} else if (elem->lexem == "b&" || elem->lexem == "|") {
 							if (firstOp->points || secondOp->points) {
 								throw SemanticError(elem, "can't cast pointer in bits operations");
@@ -863,8 +867,9 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 								if (secondOp->points) {
 									swap(*firstOp, *secondOp);
 								}
+								std::cout << *secondOp->type << "\n";
 								if (*secondOp->type != "signed" && *secondOp->type != "unsigned") {
-									throw SemanticError(elem, "can't casts pointer");
+									throw SemanticError(elem, "can't cast pointer");
 								}
 							} else {
 								if (!(*firstOp->type == "string" && *secondOp->type == "string")) {
@@ -879,7 +884,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 									throw SemanticError(elem, "can't subtract pointer");
 								}
 								if (*firstOp->type != "signed" && *firstOp->type != "unsigned") {
-									throw SemanticError(elem, "can't casts pointer");
+									throw SemanticError(elem, "can't cast pointer");
 								}
 								*firstOp = *secondOp;
 							} else {
@@ -887,7 +892,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 							}
 						} else if (elem->lexem == "%") {
 							if (firstOp->points || secondOp->points) {
-								throw SemanticError(elem, "can't casts pointer");
+								throw SemanticError(elem, "can't cast pointer");
 							}
 
 							if (*firstOp->type == "float" || *secondOp->type == "float") {
@@ -911,7 +916,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 									throw SemanticError(elem, "can't subtract pointer");
 								}
 								if(*firstOp->type != "signed" && *firstOp->type != "unsigned") {
-									throw SemanticError(elem, "can't casts pointer");
+									throw SemanticError(elem, "can't cast pointer");
 								}
 								*firstOp = *secondOp;
 							} else {
@@ -933,7 +938,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 									throw SemanticError(elem, "can't subtract pointer");
 								}
 								if(*firstOp->type != "signed" && *firstOp->type != "unsigned") {
-									throw SemanticError(elem, "can't casts pointer");
+									throw SemanticError(elem, "can't cast pointer");
 								}
 								*firstOp = *secondOp;
 							} else {
@@ -948,7 +953,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 								throw SemanticError(elem, "try assign to r-value ");
 							}
 							if(firstOp->points || secondOp->points) {
-								throw SemanticError(elem, "can't casts pointer");
+								throw SemanticError(elem, "can't cast pointer");
 							}
 							if(*firstOp->type == "float" || *secondOp->type == "float") {
 								throw SemanticError(elem, "can't % float");
@@ -974,11 +979,14 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 								throw SemanticError(elem, "try assign to r-value ");
 							}
 							if (*firstOp == *secondOp) {
+								;
 							} else if (firstOp->points && secondOp->points) {
 								_castPointersType(*firstOp, *secondOp, elem); // only for correct errors
-							} else if(firstOp->points || secondOp->points) {
+							} else if (firstOp->points) {
 								throw SemanticError(elem, "can't cast pointer");
-							} else if( firstOp->isStruct || secondOp->isStruct){
+							} else if (secondOp->points && (*firstOp->type == "signed" || *firstOp->type == "unsigned")) {
+								;
+							} else if(firstOp->isStruct || secondOp->isStruct) {
 								throw SemanticError(elem, "can't cast struct");
 							} else {
 								_castSpecialType(*firstOp, *secondOp->type, elem);
@@ -995,21 +1003,21 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 }
 
 
-std::string* Syntax::_checkNumberType(std::string& type) {
+std::string Syntax::_checkNumberType(std::string& type) {
 	for (char& elem : type) {
 		if (elem == '.') {
-			return new std::string("float");
+			return std::string("float");
 		}
 	}
-	return new std::string("unsigned");
+	return std::string("unsigned");
 }
 
 std::string* Syntax::_findVariableInTree(std::string* name, bool& isStruct) {
 	return __findVariableInTree(name, Syntax::_sCurrent, isStruct);
 }
 
-Syntax::polisType::polisType(std::string* type, bool isType, bool isReference) {
-	this->type = type;
+Syntax::polisType::polisType(std::string type, bool isType, bool isReference) {
+	this->type = new std::string(type);
 	this->isType = isType;
 	this->bitSize = 0;
 	this->points = 0;
@@ -1020,6 +1028,10 @@ Syntax::polisType::polisType(std::string* type, bool isType, bool isReference) {
 	}
 }
 
+Syntax::polisType::~polisType() {
+	delete type;
+}
+
 void Syntax::polisType::countAndRemovePoints() {
 	for(char elem : *type) {
 		if (elem == '*') {
@@ -1028,7 +1040,8 @@ void Syntax::polisType::countAndRemovePoints() {
 			isReference = true;
 		}
 	}
-	type->erase(type->size() - points - isReference, points + isReference);
+	type->erase(type->size() - points - (*type)[type->size() - 1] == '&' ? 1 : 0, 
+		points + (*type)[type->size() - 1] == '&' ? 1 : 0);
 }
 
 void Syntax::polisType::countBitSize() {
@@ -1094,9 +1107,9 @@ void Syntax::polisType::clear() {
 	this->isStruct = false;
 }
 
-void Syntax::polisType::clear(std::string* type) {
+void Syntax::polisType::clear(std::string type) {
 	delete this->type;
-	this->type = type;
+	this->type = new std::string(type);
 	this->bitSize = 0;
 	this->points = 0;
 	this->isType = true;
@@ -1111,7 +1124,8 @@ bool Syntax::polisType::operator==(polisType& second) {
 }
 
 Syntax::polisType& Syntax::polisType::operator=(polisType& second) {
-	this->type =  second.type;
+	delete this->type;
+	this->type = new std::string(*second.type);
 	this->bitSize = second.bitSize;
 	this->points = second.points;
 	this->isReference = second.isReference;
@@ -1124,7 +1138,7 @@ Syntax::polisType& Syntax::polisType::operator=(polisType& second) {
 std::string* Syntax::__findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct) {
 	for(Variable* elem : node->localVariables) {
 		if(elem->name == *name) {
-			return &(elem->typest != nullptr ? (isStruct = true, elem->type) : elem->type);
+			return elem->typest != nullptr ? (isStruct = true, new std::string(elem->type)) : new std::string(elem->type);
 		}
 	}
 	if(node->parent == nullptr) {
@@ -1158,16 +1172,22 @@ void Syntax::_castSpecialType(polisType& first, std::string second, Token* error
 	if (first.isStruct && !first.points) {
 		throw SemanticError(error, "can't cast struct type");
 	}
-	if (second == "bool") {
-		first.clear(new std::string("bool"));
+	if (*first.type == "string" && second == "string") {
+		first.clear(std::string("string"));
+	} else if (*first.type == "string") {
+		throw SemanticError(error, "can't cast string");
+	} else if (*first.type == "void") {
+		throw SemanticError(error, "can't cast void");
+	} else if (second == "bool") {
+		first.clear(std::string("bool"));
 	} else if (second == "signed") {
-		first.clear(new std::string("signed"));
+		first.clear(std::string("signed"));
 	} else if (second == "unsigned") {
-		first.clear(new std::string("unsigned"));
+		first.clear(std::string("unsigned"));
 	} else if (second == "char") {
-		first.clear(new std::string("char"));
+		first.clear(std::string("char"));
 	} else if (second == "float") {
-		first.clear(new std::string("float"));
+		first.clear(std::string("float"));
 	} else {
 		throw SemanticError(error, "can't cast");
 	}
@@ -1177,13 +1197,13 @@ void Syntax::_castSpecialType(polisType& first, std::string second, Token* error
 
 void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Token* error) {
 	if (first.isStruct || second.isStruct) {
-		throw SemanticError(error, "can't casts type struct");
+		throw SemanticError(error, "can't cast type struct");
 	}
 	if (*first.type == "void" || *second.type == "void") {
-		throw SemanticError(error, "can't casts type void");
+		throw SemanticError(error, "can't cast type void");
 	}
 	if (*first.type == "string" || *second.type == "string") {
-		throw SemanticError(error, "can't casts type string");
+		throw SemanticError(error, "can't cast type string");
 	}
 
 	if (typesCastPriop[*first.type] > typesCastPriop[*second.type]) {
@@ -1225,15 +1245,15 @@ void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {
 
 void Syntax::_castPointersType(polisType& first, polisType& second, Token* error) {
 	if (first.points != second.points) {
-		throw SemanticError(error, "can't casts pointers with differnce deepth");
+		throw SemanticError(error, "can't cast pointers with differnce deepth");
 	}
 
 	if (first.type != second.type) {
-		throw SemanticError(error, "can't casts pointers on different types");
+		throw SemanticError(error, "can't cast pointers on different types");
 	}
 
 	if(first.bitSize != second.bitSize) {
-		throw SemanticError(error, "can't casts pointers on different bits size types");
+		throw SemanticError(error, "can't cast pointers on different bits size types");
 	}
 }
 

@@ -52,6 +52,7 @@ ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
       previosToken = currentToken;
     }
   } else if (end_symbol == "fn") {
+    lex->decrementTokenItern(2);
     Token* tmp = nullptr;
     while (currentToken = _getNextToken(), tmp = _getNextToken(), currentToken->lexem != "," &&
       (currentToken->lexem != ")" || tmp->lexem != "->")) {
@@ -69,6 +70,7 @@ ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
     }
     lex->decrementTokenItern();
   } else if (end_symbol == "init") {
+    lex->decrementTokenItern(2);
     while (currentToken = _getNextToken(), (currentToken->lexem != "," || _brackets != 0) && currentToken->lexem != ";") {
       _detectAction(currentToken, previosToken, deque);
       previosToken = currentToken;
@@ -82,6 +84,7 @@ ExpParser::ExpParser(Lex* lex, std::string end_symbol) :_lex(lex) {
     }
     lex->decrementTokenItern();
   } else if (end_symbol == "struct") {
+    lex->decrementTokenItern(2);
     Token* tmp = nullptr;
     while (currentToken = _getNextToken(), tmp = _getNextToken(), currentToken->lexem != "," &&
       (currentToken->lexem != ">" || tmp->lexem != ";")) {
@@ -185,17 +188,32 @@ void ExpParser::_pushToDeque(Token* token, std::deque<Token*>& deque) {
     deque.push_back(token);
     return;
   }
-  while (!deque.empty()) {
-    if (_priorityTable.at(token->lexem) >= _priorityTable.at(deque.back()->lexem)) {
-      polis.push_back(deque.back());
-      deque.pop_back();
-      continue;
+  if (token->lexem[0] == 'u') {
+    while (!deque.empty()) {
+      if (_priorityTable.at(token->lexem) > _priorityTable.at(deque.back()->lexem)) {
+        polis.push_back(deque.back());
+        deque.pop_back();
+        continue;
+      }
+      deque.push_back(token);
+      break;
     }
-    deque.push_back(token);
-    break;
-  }
-  if (deque.empty()) {
-    deque.push_back(token);
+    if (deque.empty()) {
+      deque.push_back(token);
+    }
+  } else {
+    while (!deque.empty()) {
+      if (_priorityTable.at(token->lexem) >= _priorityTable.at(deque.back()->lexem)) {
+        polis.push_back(deque.back());
+        deque.pop_back();
+        continue;
+      }
+      deque.push_back(token);
+      break;
+    }
+    if (deque.empty()) {
+      deque.push_back(token);
+    }
   }
 }
 

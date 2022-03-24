@@ -219,7 +219,8 @@ private:
     int64_t points;
     bool isType, isReference, isStruct;
 
-    polisType(std::string* type, bool isType = false, bool isReference = true);
+    polisType(std::string type, bool isType = false, bool isReference = true);
+    ~polisType();
 
     void countAndRemovePoints();
     void countBitSize();
@@ -239,7 +240,7 @@ private:
     }
 
     void clear();
-    void clear(std::string* type);
+    void clear(std::string type);
 
     bool operator==(polisType& second);
     polisType& operator=(polisType& second);
@@ -254,7 +255,7 @@ private:
   Function* _findFunctionInStruct(std::string& type, std::string& function);
   Function* _findFunctionInTable(std::string& function);
 
-  std::string* _checkNumberType(std::string& type);
+  std::string _checkNumberType(std::string& type);
 
   void _castTypesBinaryOperation(polisType& first, polisType& second, Token* error);
   void _castSpecialType(polisType& first, std::string second, Token* error);
