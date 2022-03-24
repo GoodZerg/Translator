@@ -720,10 +720,22 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					firstOp->isReference = false;
 				}
 				polisStack.push(std::vector<polisType*>(1, firstOp));
-			} else if(elem->lexem[0] == '!' || elem->lexem[0] == '~') {
+			} else if(elem->lexem == "!") {
 				std::vector<polisType*> firstOperand = _polisStackTopWPop();
-				// lase unar
-
+				_castSpecialType(*firstOp, "bool", elem);
+				firstOp->isReference = false;
+				polisStack.push(std::vector<polisType*>(1, firstOp));
+			} else if(elem->lexem == "~") {
+				std::vector<polisType*> firstOperand = _polisStackTopWPop();
+				if(firstOp->points) {
+					throw SemanticError(elem, "can't cast pointer in bits operations");
+				} else if(*firstOp->type == "float") {
+					throw SemanticError(elem, "can't cast float in bits operations");
+				} else if(*firstOp->type != "unsigned") {
+					_castSpecialType(*firstOp, "signed", elem);
+				}
+				firstOp->isReference = false;
+				polisStack.push(std::vector<polisType*>(1, firstOp));
 			} else {
 				std::vector<polisType*> firstOperand = _polisStackTopWPop();
 				std::vector<polisType*> secondOperand = _polisStackTopWPop();
