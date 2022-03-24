@@ -190,6 +190,7 @@ private:
     }
   };
   std::vector<Function*> _functionsTable;
+
   void _addFunctionToTable(TFunction* function, Token* errorPoint = nullptr);
   void _findFunctionInTable(Function* function, Token* errorPoint = nullptr);
 
@@ -201,10 +202,10 @@ private:
       this->parent = parent;
     }
   };
-  
-  SemanticTree* _sRoot,* _sCurrent;
+
+  static SemanticTree* _sRoot,* _sCurrent;
+
   void _addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& type);
-  void _addVariableToTable();
   void _checkVariableExistance(SemanticTree* tree, std::string& name, std::string& type);
 
   typedef SyntaxError SemanticError;
@@ -214,54 +215,49 @@ private:
 
   struct polisType {
     std::string* type;
-    bool isType, isPointer, isReference, isStruct;
-    polisType(std::string* type, bool isType = false, bool isPointer = false,
-      bool isReference = false, bool isStruct = false) {
-      this->type = type;
-      this->isType = isType;
-      this->isPointer = isPointer;
-      this->isReference = isReference;
-      this->isStruct = isStruct;
-    }
+    int64_t bitSize;
+    int64_t points;
+    bool isType, isReference, isStruct;
+
+    polisType(std::string* type, bool isType = false);
+
+    void countAndRemovePoints();
+    void countBitSize();
+    
+    void transformToBaseType();
+    void transformVariableToType(Token* error);
+
+    void validateType();
 
     friend void swap(polisType& first, polisType& second) {
       std::swap(first.type, second.type);
-      std::swap(first.isPointer, second.isPointer);
+      std::swap(first.bitSize, second.bitSize);
+      std::swap(first.points, second.points);
       std::swap(first.isReference, second.isReference);
       std::swap(first.isStruct, second.isStruct);
       std::swap(first.isType, second.isType);
     }
-    void clear() {
-      delete this->type;
-      this->type = nullptr;
-      this->isType = false;
-      this->isPointer = false;
-      this->isReference = false;
-      this->isStruct = false;
-    }
-    void clear(std::string* type) {
-      delete this->type;
-      this->type = type;
-      this->isType = true;
-      this->isPointer = false;
-      this->isReference = false;
-      this->isStruct = false;
-    }
+
+    void clear();
+    void clear(std::string* type);
+
+    bool operator==(polisType& second);
+    polisType& operator=(polisType& second);
   };
 
-  std::string* _checkNumberType(std::string& type);
-  std::string* _findVariableInTree(std::string* name, bool& isStruct);
-  std::string* __findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct);
-  void _checkIsPointRef(std::string* name, bool& point, bool& ref);
+  static std::map<std::string, int64_t> typesCastPriop;
+
+  static std::string* _findVariableInTree(std::string* name, bool& isStruct);
+  static std::string* __findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct);
+  
   std::string* _findVariableInStruct(std::string& type, std::string& variable);
   Function* _findFunctionInStruct(std::string& type, std::string& function);
   Function* _findFunctionInTable(std::string& function);
+
+  std::string* _checkNumberType(std::string& type);
+
   void _castTypesBinaryOperation(polisType& first, polisType& second, Token* error);
   void _castSpecialType(polisType& first, std::string second, Token* error);
-  std::string* _getTypeWithoutPointAndRef(std::string* type);
-  void _transformVariableToType(polisType* operand, Token* elem);
-  void _transformToBaseType(std::string* name);
-  int64_t _countingNumberOfStars(std::string* type); // Deep of pointer type
   void _castPointersType(polisType& first, polisType& second, Token* error);
 };
 

@@ -20,12 +20,10 @@ const std::vector<std::string> Lex::_keywordsList = {
 };
 
 const std::vector<std::string> Lex::_typesList = {
-  BORDERED("si8"),
   BORDERED("si16"),
   BORDERED("si32"),
   BORDERED("si64"),
   BORDERED("si128"),
-  BORDERED("ui8"),
   BORDERED("ui16"),
   BORDERED("ui32"),
   BORDERED("ui64"),

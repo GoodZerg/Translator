@@ -10,6 +10,20 @@ return ahah;\
 
 #define _polisStackTopWPop() __polisStackTopWPop()()
 
+#define firstOp  firstOperand.back()
+#define secondOp secondOperand.back()
+#define thirdOp  thirdOperand.back()
+
+Syntax::SemanticTree *Syntax:: _sRoot = nullptr, *Syntax::_sCurrent = nullptr;
+
+std::map<std::string, int64_t> Syntax::typesCastPriop = {
+	{"float",    0},
+	{"signed",   1},
+	{"unsigned", 2},
+	{"char",     3},
+	{"bool",     4}
+};
+
 Syntax::Syntax(Lex* lex) {
   this->lex = lex;
   _program = new TProgram();
@@ -635,10 +649,6 @@ void Syntax::_addVariableToSemanticTree(SemanticTree* tree, std::string& name, s
 	tree->localVariables.push_back(new Variable(name, type, _findTypeStruct(type)));
 }
 
-void Syntax::_addVariableToTable() {
-
-}
-
 void Syntax::_checkVariableExistance(SemanticTree* tree, std::string& name, std::string& type) {
 	for (Variable* elem : tree->localVariables) {
 		if (elem->name == name) {
@@ -663,19 +673,19 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 		} else if (elem->type == Type::OPERATOR) {
 			if (elem->lexem[0] == 's' || elem->lexem[0] == 'p' || elem->lexem[0] == 'u') {
 				std::vector<polisType*> firstOperand = _polisStackTopWPop();
-				_transformVariableToType(firstOperand.back(), elem);
-				if(*firstOperand.back()->type == "string") {
+				firstOp->transformVariableToType(elem);
+				if(*firstOp->type == "string") {
 					throw SemanticError(elem, "u operation with string");
 					// мы это проверяем потому что хоть на синтаксисе мы не можем это сделать, но если операция применяеться 
 					// к функции и она возвращает стринг мы сосем
 				}
 				if(elem->lexem == "u-") {
-					if(firstOperand.back()->isPointer || firstOperand.back()->isReference) {
+					if(firstOp->points || firstOp->isReference) {
 						throw SemanticError(elem, "u- with pointer/ref");
 					}
 				}
 				if(elem->lexem == "u*") {
-					if(firstOperand.back()->isPointer == false) {
+					if(firstOp->points == false) {
 						throw SemanticError(elem, "try to dereference a non-pointer");
 					}
 				}
@@ -690,150 +700,146 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					Function* function = nullptr;
 					if (i + 1 < exp.size() && exp[i]->lexem[0] == '.') {
 						std::vector<polisType*> thirdOperand = _polisStackTopWPop();
-						_transformVariableToType(thirdOperand.back(), elem);
-						if (thirdOperand.back()->isStruct == false) {
+						thirdOp->transformVariableToType(elem);
+						if (thirdOp->isStruct == false) {
 							throw SemanticError(elem, "not a struct"); // TODO rename error
 						}
-						if (thirdOperand.back()->isPointer == true) {
+						if (thirdOp->points == true) {
 							throw SemanticError(elem, "wrong struct pointer"); // TODO rename error
 						}
-						if (secondOperand.back()->isType == true) {
+						if (secondOp->isType == true) {
 							throw SemanticError(elem, "wrong type"); // TODO rename error
 						}
-						function = _findFunctionInStruct(*thirdOperand.back()->type, *secondOperand.back()->type);
+						function = _findFunctionInStruct(*thirdOp->type, *secondOp->type);
 						++i;
 					} else {
-						function = _findFunctionInTable(*secondOperand.back()->type);
+						function = _findFunctionInTable(*secondOp->type);
 					}
 					if (function == nullptr) {
 						throw SemanticError(elem, "undefined function"); // TODO rename error
 					}
 					// TODO hurt in ass(подстановка аргументов)
 					polisType* retType = new polisType(&function->retType, true);
-					_checkIsPointRef(retType->type, retType->isPointer, retType->isReference);
 					polisStack.push(std::vector<polisType*>(1, retType));
-				} else {
-					_transformVariableToType(secondOperand.back(), elem);
-					if (elem->lexem == "[]") {
+					continue;
 
+				} else {
+					secondOp->transformVariableToType(elem);
+					if (elem->lexem == "[]") {
+						/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					} else if (elem->lexem == ".") {
-						if (secondOperand.back()->isStruct == false) {
+						if (secondOp->isStruct == false) {
 							throw SemanticError(elem, "not a struct"); // TODO rename error
 						}
-						if (secondOperand.back()->isPointer == true) {
+						if (secondOp->points == true) {
 							throw SemanticError(elem, "wrong struct pointer"); // TODO rename error
 						}
-						if (firstOperand.back()->isType == true) {
+						if (firstOp->isType == true) {
 							throw SemanticError(elem, "wrong type"); // TODO rename error
 						}
-						firstOperand.back()->type = _findVariableInStruct(*secondOperand.back()->type, *firstOperand.back()->type);
-						if (firstOperand.back()->type == nullptr) {
+						firstOp->type = _findVariableInStruct(*secondOp->type, *firstOp->type);
+						if (firstOp->type == nullptr) {
 							throw SemanticError(elem, "undefined variable in struct");
 						}
-						_checkIsPointRef(firstOperand.back()->type, firstOperand.back()->isPointer, firstOperand.back()->isReference);
-						polisStack.push(firstOperand);
-					} else if (elem->lexem == ",") {
 
+						firstOp->isType = true;
+						firstOp->validateType();
+
+					} else if (elem->lexem == ",") {
+						/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					} else {
-						_transformVariableToType(firstOperand.back(), elem);
+						firstOp->transformVariableToType(elem);
 						if (elem->lexem == "==" || elem->lexem == "!=") {
-							if (firstOperand.back()->isPointer && secondOperand.back()->isPointer) {
-								_castPointersType(*firstOperand.back(), *secondOperand.back(), elem);
-							} else if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
-								if (secondOperand.back()->isPointer) {
-									swap(*firstOperand.back(), *secondOperand.back());
+							if (firstOp->points && secondOp->points) {
+								_castPointersType(*firstOp, *secondOp, elem);
+							} else if (firstOp->points || secondOp->points) {
+								if (secondOp->points) {
+									swap(*firstOp, *secondOp);
 								}
-								std::string* second_ = _getTypeWithoutPointAndRef(secondOperand.back()->type);
-								if (*second_ != "signed" && *second_ != "unsigned") {
+								if (*secondOp->type != "signed" && *secondOp->type != "unsigned") {
 									throw SemanticError(elem, "can't casts pointer");
 								}
-								delete second_;
-							} else if (!(*firstOperand.back()->type == "string" && *secondOperand.back()->type == "string")) {
-								_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
+							} else if (!(*firstOp->type == "string" && *secondOp->type == "string")) {
+								_castTypesBinaryOperation(*firstOp, *secondOp, elem);
 							}
-							firstOperand.back()->clear(new std::string("bool"));
+							firstOp->clear(new std::string("bool"));
 						} else if (elem->lexem == ">" || elem->lexem == "<" ||
 							elem->lexem == ">=" || elem->lexem == "<=") {
-							if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
+							if (firstOp->points || secondOp->points) {
 								throw SemanticError(elem, "can't cast pointer in comparisons");
 							} else {
-								_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
+								_castTypesBinaryOperation(*firstOp, *secondOp, elem);
 							}
-							firstOperand.back()->clear(new std::string("bool"));
+							firstOp->clear(new std::string("bool"));
 						} else if (elem->lexem == "b&" || elem->lexem == "|") {
-							if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
+							if (firstOp->points || secondOp->points) {
 								throw SemanticError(elem, "can't cast pointer in bits operations");
-							} else if (*firstOperand.back()->type == "float" || *secondOperand.back()->type == "float") {
+							} else if (*firstOp->type == "float" || *secondOp->type == "float") {
 								throw SemanticError(elem, "can't cast float in bits operations");
-							} else if (*firstOperand.back()->type == "unsigned" || *secondOperand.back()->type == "unsigned") {
-								_castSpecialType(*firstOperand.back(), "unsigned", elem);
-								_castSpecialType(*secondOperand.back(), "unsigned", elem);
+							} else if (*firstOp->type == "unsigned" || *secondOp->type == "unsigned") {
+								_castSpecialType(*firstOp, "unsigned", elem);
+								_castSpecialType(*secondOp, "unsigned", elem);
 							} else {
-								_castSpecialType(*firstOperand.back(), "signed", elem);
-								_castSpecialType(*secondOperand.back(), "signed", elem);
+								_castSpecialType(*firstOp, "signed", elem);
+								_castSpecialType(*secondOp, "signed", elem);
 							}
 						} else if (elem->lexem == "&=" || elem->lexem == "|=") {
 							//assignment binary bit operations
 						} else if (elem->lexem == "b+") {
-							if (firstOperand.back()->isPointer && secondOperand.back()->isPointer) {
+							if (firstOp->points && secondOp->points) {
 								throw SemanticError(elem, "can't cast pointer");
 							}
-							if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
-								if (secondOperand.back()->isPointer) {
-									swap(*firstOperand.back(), *secondOperand.back());
+							if (firstOp->points || secondOp->points) {
+								if (secondOp->points) {
+									swap(*firstOp, *secondOp);
 								}
-								std::string* second_ = _getTypeWithoutPointAndRef(secondOperand.back()->type);
-								if (*second_ != "signed" && *second_ != "unsigned") {
+								if (*secondOp->type != "signed" && *secondOp->type != "unsigned") {
 									throw SemanticError(elem, "can't casts pointer");
 								}
-								delete second_;
 							} else {
-								if (!(*firstOperand.back()->type == "string" && *secondOperand.back()->type == "string")) {
-									_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
+								if (!(*firstOp->type == "string" && *secondOp->type == "string")) {
+									_castTypesBinaryOperation(*firstOp, *secondOp, elem);
 								}
 							}
 						} else if (elem->lexem == "b-") {
-							if (firstOperand.back()->isPointer && secondOperand.back()->isPointer) {
-								_castPointersType(*firstOperand.back(), *secondOperand.back(), elem);
-							} else if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
-								if (secondOperand.back()->isPointer) {
-									swap(*firstOperand.back(), *secondOperand.back());
+							if (firstOp->points && secondOp->points) {
+								_castPointersType(*firstOp, *secondOp, elem);
+							} else if (firstOp->points || secondOp->points) {
+								if (firstOp->points) {
+									throw SemanticError(elem, "can't subtract pointer");
 								}
-								std::string* second_ = _getTypeWithoutPointAndRef(secondOperand.back()->type);
-								if (*second_ != "signed" && *second_ != "unsigned") {
+								if (*firstOp->type != "signed" && *firstOp->type != "unsigned") {
 									throw SemanticError(elem, "can't casts pointer");
 								}
-								delete second_;
+								*firstOp = *secondOp;
 							} else {
-								_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
+								_castTypesBinaryOperation(*firstOp, *secondOp, elem);
 							}
 						} else if (elem->lexem == "%") {
-							if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
+							if (firstOp->points || secondOp->points) {
 								throw SemanticError(elem, "can't casts pointer");
 							}
-							std::string* first_ = _getTypeWithoutPointAndRef(firstOperand.back()->type);
-							std::string* second_ = _getTypeWithoutPointAndRef(secondOperand.back()->type);
-							if (*first_ == "double" || *second_ == "double") {
-								throw SemanticError(elem, "can't % double");
+
+							if (*firstOp->type == "float" || *secondOp->type == "float") {
+								throw SemanticError(elem, "can't % float");
 							}
-							delete first_, second_;
-							_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
+							_castTypesBinaryOperation(*firstOp, *secondOp, elem);
 						} else if (elem->lexem == "b*" || elem->lexem == "/" || elem->lexem == "^") {
-							if (firstOperand.back()->isPointer || secondOperand.back()->isPointer) {
+							if (firstOp->points || secondOp->points) {
 								throw SemanticError(elem, "can't cast pointer");
 							}
-							_castTypesBinaryOperation(*firstOperand.back(), *secondOperand.back(), elem);
+							_castTypesBinaryOperation(*firstOp, *secondOp, elem);
 						} else if (elem->lexem == "+=" || elem->lexem == "-=" || elem->lexem == "*=" ||
 							elem->lexem == "/=" || elem->lexem == "%=" || elem->lexem == "^=") {
 							//assignment binary operations
 						} else if (elem->lexem == "or" || elem->lexem == "and") {
-							_castSpecialType(*firstOperand.back(), "bool", elem);
-							_castSpecialType(*secondOperand.back(), "bool", elem);
+							_castSpecialType(*firstOp, "bool", elem);
+							_castSpecialType(*secondOp, "bool", elem);
 						} else if (elem->lexem == "=") {
-							if (*firstOperand.back()->type == *secondOperand.back()->type) {
+							if (*firstOp->type == *secondOp->type) {
 								;
-							} else if (firstOperand.back()->isPointer && secondOperand.back()->isPointer) {
-								_castPointersType(*firstOperand.back(), *secondOperand.back(), elem);
+							} else if (firstOp->points && secondOp->points) {
+								_castPointersType(*firstOp, *secondOp, elem);
 							} else {
 
 							}
@@ -845,25 +851,6 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 	}
 }
 
-void Syntax::_transformToBaseType(std::string* name) {
-	// all types now is float, signed, unsigned, string, char, void
-	std::string* type = _getTypeWithoutPointAndRef(name);
-	if (*type == "si8" || *type == "si16" || *type == "si32" || *type == "si64" || *type == "si128") {
-		*type = "signed";
-	} else if (*type == "ui8" || *type == "ui16" || *type == "ui32" || *type == "ui64" || *type == "ui128") {
-		*type = "unsigned";
-	} else if (*type == "f32" || *type == "f64" || *type == "f128") {
-		*type = "float";
-	}
-	std::string pointRef = "";
-	for (char i : *name) {
-		if (i == '*' || i == '&') {
-			pointRef += i;
-		}
-	}
-	*name = *type + pointRef;
-	delete type;
-}
 
 std::string* Syntax::_checkNumberType(std::string& type) {
 	for (char& elem : type) {
@@ -875,8 +862,121 @@ std::string* Syntax::_checkNumberType(std::string& type) {
 }
 
 std::string* Syntax::_findVariableInTree(std::string* name, bool& isStruct) {
-	return __findVariableInTree(name, _sCurrent, isStruct);
+	return __findVariableInTree(name, Syntax::_sCurrent, isStruct);
 }
+
+Syntax::polisType::polisType(std::string* type, bool isType) {
+	this->type = type;
+	this->isType = isType;
+	this->bitSize = 0;
+	this->points = 0;
+	this->isReference = false;
+	this->isStruct = false;
+	if(isType) {
+		this->validateType();
+	}
+}
+
+void Syntax::polisType::countAndRemovePoints() {
+	for(char elem : *type) {
+		if (elem == '*') {
+			++points;
+		} else if(elem == '&') {
+			isReference = true;
+		}
+	}
+	type->erase(type->size() - points - isReference, points + isReference);
+}
+
+void Syntax::polisType::countBitSize() {
+	if(*type == "char" || *type == "bool") {
+		bitSize = 8;
+	} else if(*type == "si16" || *type == "ui16") {
+		bitSize = 16;
+	} else if(*type == "si32" || *type == "ui32" || *type == "f32") {
+		bitSize = 32;
+	} else if(*type == "si64" || *type == "ui64" || *type == "f64") {
+		bitSize = 64;
+	} else if(*type == "si128" || *type == "ui128" || *type == "f128") {
+		bitSize = 128;
+	} else {
+		bitSize = 0;
+	}
+}
+
+
+void Syntax::polisType::transformToBaseType() {
+	if(*type == "si8" || *type == "si16" || *type == "si32" || *type == "si64" || *type == "si128") {
+		*type = "signed";
+	} else if(*type == "ui8" || *type == "ui16" || *type == "ui32" || *type == "ui64" || *type == "ui128") {
+		*type = "unsigned";
+	} else if(*type == "f32" || *type == "f64" || *type == "f128") {
+		*type = "float";
+	}
+}
+
+void Syntax::polisType::transformVariableToType(Token* error) {
+	if(this->isType == false) {
+		this->isType = true;
+
+		this->type = _findVariableInTree(this->type, this->isStruct);
+		if(this->type == nullptr) {
+			throw SemanticError(error, "unknown variable");
+		}
+
+		countAndRemovePoints();
+		countBitSize();
+		transformToBaseType();
+	}
+}
+
+void Syntax::polisType::validateType() {
+	this->countAndRemovePoints();
+	this->countBitSize();
+	this->transformToBaseType();
+	if(*this->type != "float" && *this->type != "signed" && *this->type != "unsigned" &&
+		*this->type != "char" && *this->type != "string" && *this->type != "void" &&
+		*this->type != "bool") {
+		this->isStruct = true;
+	}
+}
+
+void Syntax::polisType::clear() {
+	delete this->type;
+	this->type = nullptr;
+	this->bitSize = 0;
+	this->points = 0;
+	this->isType = false;
+	this->isReference = false;
+	this->isStruct = false;
+}
+
+void Syntax::polisType::clear(std::string* type) {
+	delete this->type;
+	this->type = type;
+	this->bitSize = 0;
+	this->points = 0;
+	this->isType = true;
+	this->isReference = false;
+	this->isStruct = false;
+	this->validateType();
+}
+
+bool Syntax::polisType::operator==(polisType& second) {
+	return this->points == second.points && this->type == second.type &&
+		this->bitSize == second.bitSize;
+}
+
+Syntax::polisType& Syntax::polisType::operator=(polisType& second) {
+	this->type =  second.type;
+	this->bitSize = second.bitSize;
+	this->points = second.points;
+	this->isReference = second.isReference;
+	this->isStruct = second.isStruct;
+	this->isType = second.isType;
+	return *this;
+}
+
 
 std::string* Syntax::__findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct) {
 	for(Variable* elem : node->localVariables) {
@@ -888,18 +988,6 @@ std::string* Syntax::__findVariableInTree(std::string* name, SemanticTree* node,
 		return nullptr;
 	}
 	return __findVariableInTree(name, node->parent, isStruct);
-}
-
-void Syntax::_checkIsPointRef(std::string* name, bool& point, bool& ref) {
-	for(char elem : *name) {
-		if(elem == '*') {
-			point = true;
-		}
-		if(elem == '&') {
-			ref = true;
-		}
-	}
-	return;
 }
 
 std::string* Syntax::_findVariableInStruct(std::string& type, std::string& variable) {
@@ -924,7 +1012,7 @@ Syntax::Function* Syntax::_findFunctionInTable(std::string& function) {
 }
 
 void Syntax::_castSpecialType(polisType& first, std::string second, Token* error) {
-	if (first.isStruct && !first.isPointer) {
+	if (first.isStruct && !first.points) {
 		throw SemanticError(error, "can't cast struct type");
 	}
 	if (second == "bool") {
@@ -942,58 +1030,24 @@ void Syntax::_castSpecialType(polisType& first, std::string second, Token* error
 	}
 }
 
-std::string* Syntax::_getTypeWithoutPointAndRef(std::string* type) {
-	std::string* rettype = new std::string("");
-	for (char elem : *type) {
-		if (elem == '*' || elem == '&') {
-			return rettype;
-		}
-		*rettype += elem;
-	}
-	return rettype;
-}
 
-void Syntax::_transformVariableToType(polisType* operand, Token* error) {
-	if (operand->isType == false) {
-		operand->isType = true;
-		operand->type = _findVariableInTree(operand->type, operand->isStruct);
-		if (operand->type == nullptr) {
-			throw SemanticError(error, "unknown variable");
-		}
-		_checkIsPointRef(operand->type, operand->isPointer, operand->isReference);
-		_transformToBaseType(operand->type);
-	}
-}
 
 void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Token* error) {
 	if (first.isStruct || second.isStruct) {
 		throw SemanticError(error, "can't casts type struct");
 	}
-	std::string* first_ = _getTypeWithoutPointAndRef(first.type);
-	std::string* second_ = _getTypeWithoutPointAndRef(second.type);
-	if (*first_ == "void" || *second_ == "void") {
+	if (*first.type == "void" || *second.type == "void") {
 		throw SemanticError(error, "can't casts type void");
 	}
-	if (*first_ == "string" || *second_ == "string") {
+	if (*first.type == "string" || *second.type == "string") {
 		throw SemanticError(error, "can't casts type string");
 	}
-	if (*first_ == "double" || *second_ == "double") {
-		*first.type = "double";
-		first.type = false;
-	} else if (*first_ == "signed" || *second_ == "signed") {
-		*first.type = "signed";
-		first.type = false;
-	} else if (*first_ == "unsigned" || *second_ == "unsigned") {
-		*first.type = "unsigned";
-		first.type = false;
-	} else if (*first_ == "char" || *second_ == "char") {
-		*first.type = "char";
-		first.type = false;
-	} else if (*first_ == "bool" || *second_ == "bool") {
-		*first.type = "bool";
-		first.type = false;
+
+	if (typesCastPriop[*first.type] > typesCastPriop[*second.type]) {
+		first = second;
+	} else if (typesCastPriop[*first.type] == typesCastPriop[*second.type] && first.bitSize < second.bitSize) {
+		first.bitSize = second.bitSize;
 	}
-	delete first_, second_;
 }
 
 Syntax::Function* Syntax::_findFunctionInStruct(std::string& type, std::string& function) {
@@ -1026,25 +1080,17 @@ void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {
 	_functionsTable.push_back(sFunction);
 }
 
-int64_t Syntax::_countingNumberOfStars(std::string* type) {
-	int64_t answer = 0;
-	for (char elem : *type) {
-		answer += elem == '*' ? 1 : 0;
-	}
-	return answer;
-}
-
 void Syntax::_castPointersType(polisType& first, polisType& second, Token* error) {
-	int64_t firstNumberOfStars = _countingNumberOfStars(first.type);
-	int64_t secondNumberOfStars = _countingNumberOfStars(second.type);
-	if (firstNumberOfStars != secondNumberOfStars) {
+	if (first.points != second.points) {
 		throw SemanticError(error, "can't casts pointers with differnce deepth");
 	}
-	std::string* first_ = _getTypeWithoutPointAndRef(first.type);
-	std::string* second_ = _getTypeWithoutPointAndRef(second.type);
-	if (*first_ != *second_) {
+
+	if (first.type != second.type) {
 		throw SemanticError(error, "can't casts pointers on different types");
 	}
-	delete first_, second_;
+
+	if(first.bitSize != second.bitSize) {
+		throw SemanticError(error, "can't casts pointers on different bits size types");
+	}
 }
 
