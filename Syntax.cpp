@@ -771,8 +771,6 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					secondOp->transformVariableToType(elem);
 					if (elem->lexem == "[]") {
 						firstOp->transformVariableToType(elem);
-						std::cout << *secondOp->type << "//////////\n";
-						std::cout << secondOp->points << "//////////\n";
 						if (!secondOp->points) {
 							throw SemanticError(elem, "try to index not-pointer type");
 						}
@@ -785,7 +783,6 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 						_castSpecialType(*firstOp, "signed", elem);
 						*firstOp = *secondOp;
 						firstOp->points--;
-						std::cout << *firstOp->type << "//////////\n";
 					} else if (elem->lexem == ".") {
 						if (secondOp->isStruct == false) {
 							throw SemanticError(elem, "not a struct"); // TODO rename error
@@ -1040,8 +1037,8 @@ void Syntax::polisType::countAndRemovePoints() {
 			isReference = true;
 		}
 	}
-	type->erase(type->size() - points - (*type)[type->size() - 1] == '&' ? 1 : 0, 
-		points + (*type)[type->size() - 1] == '&' ? 1 : 0);
+	type->erase(type->size() - points - ((*type)[type->size() - 1] == '&' ? 1 : 0), 
+		points + ((*type)[type->size() - 1] == '&' ? 1 : 0));
 }
 
 void Syntax::polisType::countBitSize() {
@@ -1119,7 +1116,7 @@ void Syntax::polisType::clear(std::string type) {
 }
 
 bool Syntax::polisType::operator==(polisType& second) {
-	return this->points == second.points && this->type == second.type &&
+	return this->points == second.points && *this->type == *second.type &&
 		this->bitSize == second.bitSize;
 }
 

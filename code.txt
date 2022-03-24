@@ -24,17 +24,14 @@ fn j::g() -> j;
 fn j::g() -> j {}
 struct ha<f32 g = 5>;
 struct nice<ha h>;
-f64 g = &c - (c * d) + a[10 ^ 10 / 20];
+ui32* g = &c - (c * d) + a[10 ^ 10 / 20];
 
 f128 k = a[100 + 50];
 
 string f = "helloworld";
 si32 hhhh;
 fn main() -> void {
-hhhh = a.b(100 / 100,10 * 22 / 7 ^ 6, 76 * 7, (4 + 5, 8) + 5, 45) + 10, 10;
-a.b(1, 2, 3, (4, 5), 6);
-si8 mm = 10;
-a.b(123);
+si32 mm = 10;
 }
-a* lll = 5;
-si8****** kk = 5;
+j* lll = 5;
+si32****** kk = 5;
