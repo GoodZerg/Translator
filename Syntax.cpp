@@ -491,6 +491,7 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 	}
 	lex->decrementTokenItern();
 	function->type = _parseType();
+	_returnValueType = function->type->typrStr;
 
 	token = _getNextToken();
 	if (token->lexem == ";") {
@@ -570,8 +571,9 @@ Syntax::TStruct* Syntax::_parseStruct() {
 
 Syntax::TReturn* Syntax::_parseReturn() {
 	TReturn* treturn = new TReturn();
-
+	_isReturn = true;
 	_parseExpression(treturn->exp, "exp");
+	_isReturn = false;
 	return treturn;
 }
 
@@ -669,6 +671,8 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(elem->lexem)));
 		} else if (elem->type == Type::LITERAL) {
 			polisStack.push(std::vector<polisType*>(1, new polisType("string", true, false)));
+		} else if (elem->type == Type::CHAR) {
+			polisStack.push(std::vector<polisType*>(1, new polisType("char", true, false)));
 		} else if (elem->type == Type::NUMBER) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(_checkNumberType(elem->lexem), true, false)));
 		} else if (elem->type == Type::OPERATOR) {
@@ -856,6 +860,9 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 								_castSpecialType(*firstOp, *secondOp->type, elem);
 								*firstOp = *secondOp;
 							}
+							firstOp->isReference = true;
+							polisStack.push(std::vector<polisType*>(1, firstOp));
+							continue;
 						} else if (elem->lexem == "b+") {
 							if (firstOp->points && secondOp->points) {
 								throw SemanticError(elem, "can't cast pointer");
@@ -922,7 +929,9 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 									*firstOp = *secondOp;
 								}
 							}
-
+							firstOp->isReference = true;
+							polisStack.push(std::vector<polisType*>(1, firstOp));
+							continue;
 						} else if (elem->lexem == "-=") {
 							if(!secondOp->isReference) {
 								throw SemanticError(elem, "try assign to r-value ");
@@ -944,7 +953,9 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 									*firstOp = *secondOp;
 								}
 							}
-
+							firstOp->isReference = true;
+							polisStack.push(std::vector<polisType*>(1, firstOp));
+							continue;
 						} else if (elem->lexem == "%=") {
 							if(!secondOp->isReference) {
 								throw SemanticError(elem, "try assign to r-value ");
@@ -957,7 +968,9 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 							}
 							_castSpecialType(*firstOp, *secondOp->type, elem);
 							*firstOp = *secondOp;
-
+							firstOp->isReference = true;
+							polisStack.push(std::vector<polisType*>(1, firstOp));
+							continue;
 						} else if( elem->lexem == "*=" || elem->lexem == "/=" ||  elem->lexem == "^=") {
 							if(!secondOp->isReference) {
 								throw SemanticError(elem, "try assign to r-value ");
@@ -967,7 +980,9 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 							}
 							_castSpecialType(*firstOp, *secondOp->type, elem);
 							*firstOp = *secondOp;
-
+							firstOp->isReference = true;
+							polisStack.push(std::vector<polisType*>(1, firstOp));
+							continue;
 						} else if (elem->lexem == "or" || elem->lexem == "and") {
 							_castSpecialType(*firstOp, "bool", elem);
 							_castSpecialType(*secondOp, "bool", elem);
@@ -989,6 +1004,9 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 								_castSpecialType(*firstOp, *secondOp->type, elem);
 								*firstOp = *secondOp;
 							}
+							firstOp->isReference = true;
+							polisStack.push(std::vector<polisType*>(1, firstOp));
+							continue;
 						}
 					}
 				}
@@ -997,8 +1015,30 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 			}
 		}
 	}
+	if (!polisStack.empty()) {
+		std::vector<polisType*> lastOperand = _polisStackTopWPop();
+		lastOperand.back()->transformVariableToType(exp.back());
+		if (_isReturn) {
+			polisType* returnType = new polisType(_returnValueType, true);
+			if (*lastOperand.back() == *returnType) {
+				;
+			} else if (lastOperand.back()->points && returnType->points) {
+				_castPointersType(*lastOperand.back(), *returnType, exp.back()); // only for correct errors
+			} else if (lastOperand.back()->points) {
+				throw SemanticError(exp.back(), "can't cast pointer");
+			} else if (returnType->points && (*lastOperand.back()->type == "signed" || 
+				*lastOperand.back()->type == "unsigned")) {
+				;
+			} else if (lastOperand.back()->isStruct || returnType->isStruct) {
+				throw SemanticError(exp.back(), "can't cast struct");
+			} else {
+				_castSpecialType(*lastOperand.back(), *returnType->type, exp.back());
+			}
+		}
+	} else if (_isReturn && _returnValueType != "void") {
+		throw SemanticError(exp.back(), "function return wrong type");
+	}
 }
-
 
 std::string Syntax::_checkNumberType(std::string& type) {
 	for (char& elem : type) {
@@ -1056,7 +1096,6 @@ void Syntax::polisType::countBitSize() {
 		bitSize = 0;
 	}
 }
-
 
 void Syntax::polisType::transformToBaseType() {
 	if(*type == "si8" || *type == "si16" || *type == "si32" || *type == "si64" || *type == "si128") {
@@ -1131,7 +1170,6 @@ Syntax::polisType& Syntax::polisType::operator=(polisType& second) {
 	return *this;
 }
 
-
 std::string* Syntax::__findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct) {
 	for(Variable* elem : node->localVariables) {
 		if(elem->name == *name) {
@@ -1189,8 +1227,6 @@ void Syntax::_castSpecialType(polisType& first, std::string second, Token* error
 		throw SemanticError(error, "can't cast");
 	}
 }
-
-
 
 void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Token* error) {
 	if (first.isStruct || second.isStruct) {
@@ -1253,4 +1289,44 @@ void Syntax::_castPointersType(polisType& first, polisType& second, Token* error
 		throw SemanticError(error, "can't cast pointers on different bits size types");
 	}
 }
+/*ui32* a = 0;
+ui32 b = 10, c, d = 100 + 100;
+struct j <char b = 10 * 10, string f = "123" >;
 
+fn bb(si32 a = 10 * 10 - 5, ui128 _hh = 20, ui128 k = 14)->void{
+    si32 b;
+    if (a > 10 * 10) {
+    while (d + 5 == 123 & d) {
+        for(f32 a = 10; b < 10; b++){
+            foreach(j h -> b) {
+				ui32 a, b, c;
+				a = b = c;
+			}
+        }
+    }
+    } else {
+    f32 b;
+    }
+    j g;
+}
+fn j::b() -> void;
+fn j::b() -> void {}
+fn ll(ui32 g) -> void;
+fn ll(ui32 g) -> void {}
+struct b<>;
+fn j::g() -> j;
+fn j::g() -> j {}
+struct ha<f32 g = 5>;
+struct nice<ha h>;
+ui32* g = &c - (c * d) + a[10 ^ 10 / 20];
+
+f128 k = a[100 + 50];
+
+string f = "helloworld";
+si32 hhhh;
+fn main() -> void {
+si32 mm = 10;
+}
+j* lll = 5;
+si32****** kk = 5;
+*/

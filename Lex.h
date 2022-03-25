@@ -16,6 +16,7 @@ enum class Type {
 	NUMBER,
 	LITERAL,
 	PUNKTUATION,
+	CHAR,
 	UNEXPECTED
 };
 

@@ -211,7 +211,10 @@ private:
   typedef SyntaxError SemanticError;
 
   void _validatePolis(std::vector<Token*>& exp);
+  
   bool _flagOfSemantic = true;
+  std::string _returnValueType = "";
+  bool _isReturn = false;
 
   struct polisType {
     std::string* type;

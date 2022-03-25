@@ -93,6 +93,7 @@ const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {
    {Type::ID,          R"(_*[a-zA-Z][_a-zA-Z0-9]*)"},  // put id regex - template
    {Type::NUMBER,      R"([0-9]+\.[0-9]+|[0-9]+)"}, // put number regex - template
    {Type::LITERAL,     R"(\"([^\"])*\")"}, // put literal regex - template
+   {Type::CHAR,        R"(\'(.)\')"},
    {Type::UNEXPECTED,  R"(.)"}
 };
 
@@ -208,6 +209,9 @@ std::string Lex::_debug(Type type) noexcept{
         case Type::LITERAL:
             return "LITERAL";
             break;
+        case Type::CHAR:
+          return "CHAR";
+          break;
         case Type::PUNKTUATION:
             return "PUNKTUATION";
             break;
