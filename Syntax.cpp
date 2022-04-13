@@ -746,7 +746,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 				std::vector<polisType*> secondOperand = _polisStackTopWPop();
 				if (elem->lexem == "fn") {
 					Function* function = nullptr;
-					if (i + 1 < exp.size() && exp[i]->lexem[0] == '.') {
+					if (i + 1 < exp.size() && exp[i + 1]->lexem[0] == '.') {
 						std::vector<polisType*> thirdOperand = _polisStackTopWPop();
 						thirdOp->transformVariableToType(elem);
 						if (thirdOp->isStruct == false) {
