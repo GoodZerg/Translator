@@ -155,7 +155,7 @@ private:
   struct TypeStruct {
     std::string type;
     std::vector<Variable*> stVariables;
-    std::vector<Function*> stFunctions;
+    std::map<std::string, std::vector<Function*>> stFunctions;
   };
 
   std::vector<TypeStruct*> _structsTable = {};
@@ -189,10 +189,11 @@ private:
       this->isImplemented = isImplemented;
     }
   };
-  std::vector<Function*> _functionsTable;
+  static std::map<std::string, std::vector<Function*>> _functionsTable;
 
   void _addFunctionToTable(TFunction* function, Token* errorPoint = nullptr);
-  void _findFunctionInTable(Function* function, Token* errorPoint = nullptr);
+  void _findFunctionInTable(Function* function, Token* errorPoint = nullptr, 
+    std::map<std::string, std::vector<Function*>>& functionsTable = _functionsTable);
 
   struct SemanticTree {
     std::vector<SemanticTree*> nodes;

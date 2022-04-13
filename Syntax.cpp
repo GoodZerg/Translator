@@ -15,6 +15,7 @@ return ahah;\
 #define thirdOp  thirdOperand.back()
 
 Syntax::SemanticTree *Syntax:: _sRoot = nullptr, *Syntax::_sCurrent = nullptr;
+std::map<std::string, std::vector<Syntax::Function*>> Syntax::_functionsTable = std::map< std::string, std::vector<Syntax::Function*>>();
 
 std::map<std::string, int64_t> Syntax::typesCastPriop = {
 	{"float",    0},
@@ -621,15 +622,21 @@ Syntax::Variable* Syntax::_castParametrToVariable(_parameter* parametr) {
 	return new Variable(parametr->name->lexem, parametr->type->typrStr, _findTypeStruct(parametr->type->typrStr));
 }
 
-void Syntax::_findFunctionInTable(Function* function, Token* errorPoint) {
-	for (Function* elem : _functionsTable) {
-		if (elem->belongToStruct == function->belongToStruct &&
-			elem->name == function->name &&
-			elem->parameters.size() == function->parameters.size()) {
+void Syntax::_findFunctionInTable(Function* function, Token* errorPoint, 
+	std::map<std::string, std::vector<Function*>>& functionsTable) {
+	std::vector<Function*> functionsArray = functionsTable[function->name];
+	bool flagIsNotSameFunction = false;
+	for (Function* elem : functionsArray) {
+		if (elem->parameters.size() == function->parameters.size()) {
 			for (size_t index = 0; index < elem->parameters.size(); ++index) {
 				if (elem->parameters[index]->type != function->parameters[index]->type) {
-					return;
+					flagIsNotSameFunction = true;
+					break;
 				}
+			}
+			if (flagIsNotSameFunction) {
+				flagIsNotSameFunction = false;
+				continue;
 			}
 			if (elem->isImplemented == false) {
 				if (function->isImplemented == true) {
@@ -1194,7 +1201,8 @@ std::string* Syntax::_findVariableInStruct(std::string& type, std::string& varia
 }
 
 Syntax::Function* Syntax::_findFunctionInTable(std::string& function) {
-	for (Function* elem : _functionsTable) {
+	std::vector<Function*> functionsTable = _functionsTable[function];
+	for (Function* elem : functionsTable) {
 		if (elem->name == function) {
 			return elem;
 		}
@@ -1247,8 +1255,8 @@ void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Toke
 }
 
 Syntax::Function* Syntax::_findFunctionInStruct(std::string& type, std::string& function) {
-	TypeStruct* typest = _findTypeStruct(type);
-	for (Function* elem : typest->stFunctions) {
+	std::vector<Function*> functionsArray = _findTypeStruct(type)->stFunctions[function];
+	for (Function* elem : functionsArray) {
 		if (elem->name == function) {
 			return elem;
 		}
@@ -1262,18 +1270,20 @@ void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {
 	for (_parameter* elem : tFunction->parameters) {
 		sFunction->parameters.push_back(_castParametrToVariable(elem));
 	}
+	if (tFunction->body != nullptr) {
+		sFunction->isImplemented = true;
+	}
 	if (tFunction->nameStruct != nullptr) {
 		sFunction->belongToStruct = _findTypeStruct(tFunction->nameStruct->lexem);
 		if (sFunction->belongToStruct == nullptr) {
 			throw SemanticError(errorPoint, "undefined struct");
 		}
-		sFunction->belongToStruct->stFunctions.push_back(sFunction);
+		_findFunctionInTable(sFunction, errorPoint, sFunction->belongToStruct->stFunctions);
+		sFunction->belongToStruct->stFunctions[sFunction->name].push_back(sFunction);
+	} else {
+		_findFunctionInTable(sFunction, errorPoint);
+		_functionsTable[sFunction->name].push_back(sFunction);
 	}
-	if (tFunction->body != nullptr) {
-		sFunction->isImplemented = true;
-	}
-	_findFunctionInTable(sFunction, errorPoint);
-	_functionsTable.push_back(sFunction);
 }
 
 void Syntax::_castPointersType(polisType& first, polisType& second, Token* error) {
