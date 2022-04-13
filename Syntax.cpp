@@ -752,7 +752,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 				std::vector<polisType*> firstOperand = _polisStackTopWPop();
 				std::vector<polisType*> secondOperand = _polisStackTopWPop();
 				if (elem->lexem == "fn") {
-					Function* function = nullptr;
+					std::vector<Syntax::Function*> function;
 					if (i + 1 < exp.size() && exp[i + 1]->lexem[0] == '.') {
 						std::vector<polisType*> thirdOperand = _polisStackTopWPop();
 						thirdOp->transformVariableToType(elem);
@@ -770,12 +770,12 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					} else {
 						function = _findFunctionInTable(*secondOp->type);
 					}
-					if (function == nullptr) {
+					if (function.empty()) {
 						throw SemanticError(elem, "undefined function"); // TODO rename error
 					}
 					// TODO hurt in ass(подстановка аргументов)
-					polisType* retType = new polisType(function->retType, true);
-					polisStack.push(std::vector<polisType*>(1, retType));
+					//polisType* retType = new polisType(function->retType, true);
+					//polisStack.push(std::vector<polisType*>(1, retType));
 					continue;
 
 				} else {
@@ -1200,15 +1200,8 @@ std::string* Syntax::_findVariableInStruct(std::string& type, std::string& varia
 	return nullptr;
 }
 
-Syntax::Function* Syntax::_findFunctionInTable(std::string& function) {
-	std::vector<Function*> functionsTable = _functionsTable[function];
-	for (Function* elem : functionsTable) {
-		if (elem->name == function) {
-			return elem;
-		}
-	}
-
-	return nullptr;
+std::vector<Syntax::Function*>& Syntax::_findFunctionInTable(std::string& function) {
+	return _functionsTable[function];
 }
 
 void Syntax::_castSpecialType(polisType& first, std::string second, Token* error) {
@@ -1254,15 +1247,8 @@ void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Toke
 	}
 }
 
-Syntax::Function* Syntax::_findFunctionInStruct(std::string& type, std::string& function) {
-	std::vector<Function*> functionsArray = _findTypeStruct(type)->stFunctions[function];
-	for (Function* elem : functionsArray) {
-		if (elem->name == function) {
-			return elem;
-		}
-	}
-
-	return nullptr;
+std::vector<Syntax::Function*>& Syntax::_findFunctionInStruct(std::string& type, std::string& function) {
+	return _findTypeStruct(type)->stFunctions[function];
 }
 
 void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {

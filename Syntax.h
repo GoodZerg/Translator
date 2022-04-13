@@ -256,8 +256,8 @@ private:
   static std::string* __findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct);
   
   std::string* _findVariableInStruct(std::string& type, std::string& variable);
-  Function* _findFunctionInStruct(std::string& type, std::string& function);
-  Function* _findFunctionInTable(std::string& function);
+  std::vector<Syntax::Function*>& _findFunctionInStruct(std::string& type, std::string& function);
+  std::vector<Syntax::Function*>& _findFunctionInTable(std::string& function);
 
   std::string _checkNumberType(std::string& type);
 
