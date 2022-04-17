@@ -6,6 +6,9 @@ fn nn(si32 a = 5)->void;
 fn nn(si32 a)->void {
 }
 fn nn(si32 a = 5, ui32 g = 10)->void;
+fn an(si32 a = 5)->void;
+fn an(si32 a)->si32 {
+}
 fn main(string b = "10") -> void {
 	return;
 }

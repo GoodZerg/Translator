@@ -653,6 +653,9 @@ bool Syntax::_checkFunctionInTable(Function* function, Token* errorPoint,
 				//throw _SemanticError("double prototype");
 				throw SemanticError(errorPoint, "double prototype");
 			}
+			if (elem->retType == function->retType) {
+				throw SemanticError(errorPoint, "wrong overload");
+			}
 			if (function->isImplemented == true) {
 				//throw _SemanticError("ambiguous definition");
 				throw SemanticError(errorPoint, "ambiguous definition");
@@ -761,7 +764,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 				std::vector<polisType*> firstOperand = _polisStackTopWPop();
 				std::vector<polisType*> secondOperand = _polisStackTopWPop();
 				if (elem->lexem == "fn") {
-					std::vector<Syntax::Function*> function;
+					std::vector<Function*> functions;
 					if (i + 1 < exp.size() && exp[i + 1]->lexem[0] == '.') {
 						std::vector<polisType*> thirdOperand = _polisStackTopWPop();
 						thirdOp->transformVariableToType(elem);
@@ -774,14 +777,16 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 						if (secondOp->isType == true) {
 							throw SemanticError(elem, "wrong type"); // TODO rename error
 						}
-						function = _findFunctionInStruct(*thirdOp->type, *secondOp->type);
+						functions = _findFunctionInStruct(*thirdOp->type, *secondOp->type);
 						++i;
 					} else {
-						function = _findFunctionInTable(*secondOp->type);
+						functions = _findFunctionInTable(*secondOp->type);
 					}
-					if (function.empty()) {
+					if (functions.empty()) {
 						throw SemanticError(elem, "undefined function"); // TODO rename error
 					}
+					Function* calledFunction = nullptr;
+
 					// TODO hurt in ass(подстановка аргументов)
 					//polisType* retType = new polisType(function->retType, true);
 					//polisStack.push(std::vector<polisType*>(1, retType));
@@ -1254,6 +1259,14 @@ void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Toke
 	} else if (typesCastPriop[*first.type] == typesCastPriop[*second.type] && first.bitSize < second.bitSize) {
 		first.bitSize = second.bitSize;
 	}
+}
+
+Syntax::Function* Syntax::_firstSubstitution(std::vector<Syntax::Function*> functions) {
+	return nullptr;
+}
+
+Syntax::Function* Syntax::_secondSubstitution(std::vector<Syntax::Function*> functions) {
+	return nullptr;
 }
 
 std::vector<Syntax::Function*>& Syntax::_findFunctionInStruct(std::string& type, std::string& function) {
