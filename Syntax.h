@@ -192,8 +192,8 @@ private:
   static std::map<std::string, std::vector<Function*>> _functionsTable;
 
   void _addFunctionToTable(TFunction* function, Token* errorPoint = nullptr);
-  void _findFunctionInTable(Function* function, Token* errorPoint = nullptr, 
-    std::map<std::string, std::vector<Function*>>& functionsTable = _functionsTable);
+  bool _checkFunctionInTable(Function* function, Token* errorPoint = nullptr, 
+    std::map<std::string, std::vector<Function*>>& functionsTable = _functionsTable); // return true if replace prototype
 
   struct SemanticTree {
     std::vector<SemanticTree*> nodes;

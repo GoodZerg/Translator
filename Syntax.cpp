@@ -622,7 +622,7 @@ Syntax::Variable* Syntax::_castParametrToVariable(_parameter* parametr) {
 	return new Variable(parametr->name->lexem, parametr->type->typrStr, _findTypeStruct(parametr->type->typrStr));
 }
 
-void Syntax::_findFunctionInTable(Function* function, Token* errorPoint, 
+bool Syntax::_checkFunctionInTable(Function* function, Token* errorPoint, 
 	std::map<std::string, std::vector<Function*>>& functionsTable) {
 	std::vector<Function*> functionsArray = functionsTable[function->name];
 	bool flagIsNotSameFunction = false;
@@ -640,7 +640,15 @@ void Syntax::_findFunctionInTable(Function* function, Token* errorPoint,
 			}
 			if (elem->isImplemented == false) {
 				if (function->isImplemented == true) {
-					continue;
+					if (elem->indexStartDefault != elem->parameters.size() && 
+						function->indexStartDefault != function->parameters.size()) {
+						throw SemanticError(errorPoint, "double default value");
+					}
+					elem->isImplemented = true;
+					if (elem->indexStartDefault > function->indexStartDefault) {
+						elem->indexStartDefault = function->indexStartDefault;
+					}
+					return true;
 				}
 				//throw _SemanticError("double prototype");
 				throw SemanticError(errorPoint, "double prototype");
@@ -653,6 +661,7 @@ void Syntax::_findFunctionInTable(Function* function, Token* errorPoint,
 			throw SemanticError(errorPoint, "re-declaration");
 		}
 	}
+	return false;
 }
 
 void Syntax::_addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& type) {
@@ -1264,11 +1273,13 @@ void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {
 		if (sFunction->belongToStruct == nullptr) {
 			throw SemanticError(errorPoint, "undefined struct");
 		}
-		_findFunctionInTable(sFunction, errorPoint, sFunction->belongToStruct->stFunctions);
-		sFunction->belongToStruct->stFunctions[sFunction->name].push_back(sFunction);
+		if (!_checkFunctionInTable(sFunction, errorPoint, sFunction->belongToStruct->stFunctions)) {
+			sFunction->belongToStruct->stFunctions[sFunction->name].push_back(sFunction);
+		}
 	} else {
-		_findFunctionInTable(sFunction, errorPoint);
-		_functionsTable[sFunction->name].push_back(sFunction);
+		if (!_checkFunctionInTable(sFunction, errorPoint)) {
+			_functionsTable[sFunction->name].push_back(sFunction);
+		}
 	}
 }
 
