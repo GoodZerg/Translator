@@ -786,8 +786,30 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 						throw SemanticError(elem, "undefined function"); // TODO rename error
 					}
 					Function* calledFunction = nullptr;
-					if ((calledFunction = _firstSubstitution(functions, firstOperand)) == nullptr) {
-						calledFunction = _secondSubstitution(functions, firstOperand);
+					auto aa = [&](const Syntax::Function&, const Syntax::Function&) -> bool {
+						return false;
+					};
+					if ((calledFunction = _findSubstitution (functions, firstOperand, elem,
+						[](const Syntax::Function& function, const std::vector<polisType*>& parametrs)->bool {
+							for (size_t i = 0; i < parametrs.size(); i++) {
+								if (function.parameters.size() <= i) {
+									return false;
+								}
+								polisType* elem = new polisType (function.parameters[i]->type, true);
+								if (*elem != *parametrs[i]) {
+									return false;
+								}
+							}
+							if (parametrs.size() - 1 >= function.indexStartDefault) {
+								return true;
+							}
+							return false;
+						})
+						) == nullptr) {
+						calledFunction = _findSubstitution(functions, firstOperand, elem,
+							[](const Syntax::Function& function, const std::vector<polisType*>& parametrs)->bool {
+								return false;																			// TODO comp
+							});
 					}
 					polisType* retType = new polisType(calledFunction->retType, true);
 					polisStack.push(std::vector<polisType*>(1, retType));
@@ -1180,6 +1202,10 @@ bool Syntax::polisType::operator==(polisType& second) {
 		this->bitSize == second.bitSize;
 }
 
+bool Syntax::polisType::operator!=(polisType& second) {
+	return !(*this == second);
+}
+
 Syntax::polisType& Syntax::polisType::operator=(polisType& second) {
 	delete this->type;
 	this->type = new std::string(*second.type);
@@ -1261,12 +1287,19 @@ void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Toke
 	}
 }
 
-Syntax::Function* Syntax::_firstSubstitution(std::vector<Syntax::Function*>& functions, std::vector<polisType*>& parametrs) {
-	return nullptr;
-}
-
-Syntax::Function* Syntax::_secondSubstitution(std::vector<Syntax::Function*>& functions, std::vector<polisType*>& parametrs) {
-	return nullptr;
+Syntax::Function* Syntax::_findSubstitution(std::vector<Syntax::Function*>& functions, std::vector<polisType*>& parametrs, 
+	Token* error, compFunctions comp) {
+	Syntax::Function* goodSubstitution = nullptr;
+	for (Syntax::Function* iter : functions) {
+		if (comp(*iter, parametrs)) {
+			if (!goodSubstitution) {
+				goodSubstitution = iter;
+			} else {
+				throw SemanticError(error, "no unambiguous substitution (no cast)");
+			}
+		}
+	}
+	return goodSubstitution;
 }
 
 std::vector<Syntax::Function*>& Syntax::_findFunctionInStruct(std::string& type, std::string& function) {

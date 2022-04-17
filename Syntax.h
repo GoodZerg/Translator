@@ -247,6 +247,7 @@ private:
     void clear(std::string type);
 
     bool operator==(polisType& second);
+    bool operator!=(polisType& second);
     polisType& operator=(polisType& second);
   };
 
@@ -265,7 +266,11 @@ private:
   void _castSpecialType(polisType& first, std::string second, Token* error);
   void _castPointersType(polisType& first, polisType& second, Token* error);
 
-  Function* _firstSubstitution(std::vector<Function*>& functions, std::vector<polisType*>& parametrs);
-  Function* _secondSubstitution(std::vector<Function*>& functions, std::vector<polisType*>& parametrs);
+
+  typedef bool(*compFunctions)(const Syntax::Function&, const std::vector<polisType*>&);
+
+  Function* _findSubstitution(std::vector<Function*>& functions, std::vector<polisType*>& parametrs, 
+    Token* error, compFunctions comp);
+  
 };
 
