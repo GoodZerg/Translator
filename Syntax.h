@@ -265,7 +265,7 @@ private:
   void _castSpecialType(polisType& first, std::string second, Token* error);
   void _castPointersType(polisType& first, polisType& second, Token* error);
 
-  Function* _firstSubstitution(std::vector<Function*>& functions);
-  Function* _secondSubstitution(std::vector<Function*>& functions);
+  Function* _firstSubstitution(std::vector<Function*>& functions, std::vector<polisType*>& parametrs);
+  Function* _secondSubstitution(std::vector<Function*>& functions, std::vector<polisType*>& parametrs);
 };
 

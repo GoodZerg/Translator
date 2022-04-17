@@ -786,12 +786,12 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 						throw SemanticError(elem, "undefined function"); // TODO rename error
 					}
 					Function* calledFunction = nullptr;
-
-					// TODO hurt in ass(подстановка аргументов)
-					//polisType* retType = new polisType(function->retType, true);
-					//polisStack.push(std::vector<polisType*>(1, retType));
+					if ((calledFunction = _firstSubstitution(functions, firstOperand)) == nullptr) {
+						calledFunction = _secondSubstitution(functions, firstOperand);
+					}
+					polisType* retType = new polisType(calledFunction->retType, true);
+					polisStack.push(std::vector<polisType*>(1, retType));
 					continue;
-
 				} else {
 					secondOp->transformVariableToType(elem);
 					if (elem->lexem == "[]") {
@@ -1261,11 +1261,11 @@ void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Toke
 	}
 }
 
-Syntax::Function* Syntax::_firstSubstitution(std::vector<Syntax::Function*> functions) {
+Syntax::Function* Syntax::_firstSubstitution(std::vector<Syntax::Function*>& functions, std::vector<polisType*>& parametrs) {
 	return nullptr;
 }
 
-Syntax::Function* Syntax::_secondSubstitution(std::vector<Syntax::Function*> functions) {
+Syntax::Function* Syntax::_secondSubstitution(std::vector<Syntax::Function*>& functions, std::vector<polisType*>& parametrs) {
 	return nullptr;
 }
 
