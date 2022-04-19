@@ -295,7 +295,7 @@ void ExpParser::_checkErrors(Token* currentToken, Token* previosToken) {
     if (!(previosToken->type == Type::ID || previosToken->type == Type::NUMBER || 
       previosToken->type == Type::LITERAL || previosToken->type == Type::CHAR ||
       previosToken->type == Type::UNEXPECTED || previosToken->lexem == "]" || previosToken->lexem == ")" ||
-      previosToken->lexem == "s++" || previosToken->lexem == "s--")) {
+      previosToken->lexem == "s++" || previosToken->lexem == "s--" || previosToken->lexem == "(")) {
       throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
     }
   } else if (currentToken->lexem == "]") {
