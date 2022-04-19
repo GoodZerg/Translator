@@ -785,31 +785,51 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					if (functions.empty()) {
 						throw SemanticError(elem, "undefined function"); // TODO rename error
 					}
+					if (firstOperand.size() == 1) {
+						firstOperand[0]->transformVariableToType(elem);
+					}
 					Function* calledFunction = nullptr;
-					auto aa = [&](const Syntax::Function&, const Syntax::Function&) -> bool {
-						return false;
-					};
-					if ((calledFunction = _findSubstitution (functions, firstOperand, elem,
-						[](const Syntax::Function& function, const std::vector<polisType*>& parametrs)->bool {
-							for (size_t i = 0; i < parametrs.size(); i++) {
-								if (function.parameters.size() <= i) {
-									return false;
-								}
-								polisType* elem = new polisType (function.parameters[i]->type, true);
-								if (*elem != *parametrs[i]) {
-									return false;
-								}
-							}
-							if (parametrs.size() - 1 >= function.indexStartDefault) {
-								return true;
-							}
-							return false;
+					if ((calledFunction = _findSubstitution (functions, firstOperand, elem, 
+						[](const polisType* first, const polisType* second) -> bool {
+							return *first == *second;
 						})
 						) == nullptr) {
-						calledFunction = _findSubstitution(functions, firstOperand, elem,
-							[](const Syntax::Function& function, const std::vector<polisType*>& parametrs)->bool {
-								return false;																			// TODO comp
+						calledFunction = _findSubstitution(functions, firstOperand, elem, 
+							[](const polisType* first, const polisType* second) -> bool {
+								if (first->points ^ second->points) {
+									return false; // cannot cast pointer to not pointer
+								}
+								if (first->points) {
+									if ((first->type != second->type) || (first->bitSize != second->bitSize) ||
+										(first->points != second->points)) {
+										return false;
+									} 
+								} else {
+									if (first->isReference > second->isReference) {
+										return false; // try to pass by reference rvalue
+									}
+									if (first->type == second->type) {
+										return true;
+									} else {
+										if (first->isStruct || second->isStruct) {
+											return false;
+										}
+										if (*first->type == "string" || *second->type == "string") {
+											return false;
+										}
+										/* cast float to double (mb need)
+										if ((*first->type == "float" && *second->type == "char") ||
+											(*second->type == "float" && *first->type == "char")) {
+											return false;
+										}
+										*/
+									}
+								}
+								return true;
 							});
+					}
+					if (calledFunction == nullptr) {
+						throw SemanticError(elem, "unknown function call");
 					}
 					polisType* retType = new polisType(calledFunction->retType, true);
 					polisStack.push(std::vector<polisType*>(1, retType));
@@ -1086,10 +1106,10 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 std::string Syntax::_checkNumberType(std::string& type) {
 	for (char& elem : type) {
 		if (elem == '.') {
-			return std::string("float");
+			return std::string("f128");
 		}
 	}
-	return std::string("unsigned");
+	return std::string("ui128");
 }
 
 std::string* Syntax::_findVariableInTree(std::string* name, bool& isStruct) {
@@ -1197,12 +1217,12 @@ void Syntax::polisType::clear(std::string type) {
 	this->validateType();
 }
 
-bool Syntax::polisType::operator==(polisType& second) {
+bool Syntax::polisType::operator==(const polisType& second) const {
 	return this->points == second.points && *this->type == *second.type &&
 		this->bitSize == second.bitSize;
 }
 
-bool Syntax::polisType::operator!=(polisType& second) {
+bool Syntax::polisType::operator!=(const polisType& second) const {
 	return !(*this == second);
 }
 
@@ -1288,14 +1308,14 @@ void Syntax::_castTypesBinaryOperation(polisType& first, polisType& second, Toke
 }
 
 Syntax::Function* Syntax::_findSubstitution(std::vector<Syntax::Function*>& functions, std::vector<polisType*>& parametrs, 
-	Token* error, compFunctions comp) {
+	Token* error, castFunction cast) {
 	Syntax::Function* goodSubstitution = nullptr;
 	for (Syntax::Function* iter : functions) {
-		if (comp(*iter, parametrs)) {
+		if (_compFunctions(*iter, parametrs, cast)) {
 			if (!goodSubstitution) {
 				goodSubstitution = iter;
 			} else {
-				throw SemanticError(error, "no unambiguous substitution (no cast)");
+				throw SemanticError(error, "no unambiguous substitution");
 			}
 		}
 	}
@@ -1342,6 +1362,23 @@ void Syntax::_castPointersType(polisType& first, polisType& second, Token* error
 		throw SemanticError(error, "can't cast pointers on different bits size types");
 	}
 }
+
+bool Syntax::_compFunctions(const Syntax::Function& function, const std::vector<polisType*>& parametrs, castFunction cast) noexcept {
+	for (size_t i = 0; i < parametrs.size(); i++) {
+		if (function.parameters.size() <= i) {
+			return false;
+		}
+		polisType* type = new polisType(function.parameters[i]->type, true);
+		if (!cast(type, parametrs[i])) {
+			return false;
+		}
+	}
+	if (parametrs.size() - 1 >= function.indexStartDefault) {
+		return true;
+	}
+	return false;
+}
+
 /*ui32* a = 0;
 ui32 b = 10, c, d = 100 + 100;
 struct j <char b = 10 * 10, string f = "123" >;

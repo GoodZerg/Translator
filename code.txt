@@ -10,6 +10,8 @@ fn an(si32 a = 5)->void;
 fn an(si32 a)->si32 {
 }
 fn main(string b = "10") -> void {
+si32 cc = 0;
+an();
 	return;
 }
 struct kk <>;
@@ -26,6 +28,7 @@ ui32 b = 10, c, d = 100 + 100;
 struct j <char b = 10 * 10, string f = "123" >;
 
 fn bb(si32 a = 10 * 10 - 5, ui128 _hh = 20, ui128 k = 14)->void{
+    
     si32 b;
     if (a > 10 * 10) {
     while (d + 5 == 123 & d) {

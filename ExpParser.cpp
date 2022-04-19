@@ -163,7 +163,7 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
     } else if (currentToken->lexem == "(") {
       ++_brackets;
       if (previosToken->type == Type::ID) {
-        _pushToDeque(new Token{ Type::KEYWORD , "fn", 0, 0, nullptr }, deque);
+        _pushToDeque(new Token{ Type::OPERATOR , "fn", 0, 0, nullptr }, deque);
         currentToken->type == Type::UNEXPECTED;
       }
       _pushToDeque(currentToken, deque);
