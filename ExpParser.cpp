@@ -163,6 +163,7 @@ void ExpParser::_detectAction(Token* currentToken, Token* previosToken, std::deq
     } else if (currentToken->lexem == "(") {
       ++_brackets;
       if (previosToken->type == Type::ID) {
+        polis.back()->lexem = "0_" + polis.back()->lexem;
         _pushToDeque(new Token{ Type::OPERATOR , "fn", 0, 0, nullptr }, deque);
         //currentToken->type == Type::UNEXPECTED;
       }
@@ -421,10 +422,11 @@ void ExpParser::_descentToIndex(Token* token, std::deque<Token*>& deque) {
 }
 
 void ExpParser::_descentToBracket(Token* token, std::deque<Token*>& deque) {
-  if (deque.back()->lexem == "fn") {
-    polis.push_back(new Token{ Type::OPERATOR , "0_fn", 0, 0, nullptr });
-    polis.push_back(deque.back());
+  if (deque.back()->lexem == "(") {
     deque.pop_back();
+    if (deque.back()->lexem != "fn") {
+      throw SyntaxError(token, "empty brackets");
+    }
   } else {
     while (!deque.empty()) {
       if (deque.back()->lexem != "(") {
@@ -434,9 +436,9 @@ void ExpParser::_descentToBracket(Token* token, std::deque<Token*>& deque) {
       }
       break;
     }
+    if (deque.empty()) {
+      throw SyntaxError(token, "expected ("); // TODO rename error
+    }
+    deque.pop_back();
   }
-  if (deque.empty()) {
-    throw SyntaxError(token, "expected ("); // TODO rename error
-  }
-  deque.pop_back();
 }

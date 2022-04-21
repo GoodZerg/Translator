@@ -127,7 +127,7 @@ private:
     std::vector<_parameter*> parameters;
     TType* type;
     TBlock* body = nullptr;
-    int64_t indexStartDefault = -1;
+    int64_t indexStartDefault = 0;
   };
   TFunction* _parseFunction(TFunction* function = nullptr);
 
@@ -179,7 +179,7 @@ private:
     TypeStruct* belongToStruct;
     std::string name, retType;
     std::vector<Variable*> parameters;
-    int64_t indexStartDefault = -1;
+    int64_t indexStartDefault = 0;
     bool isImplemented;
     Function(std::string& name, std::string& retType, int64_t indexStartDefault, bool isImplemented = false, TypeStruct* belongToStruct = nullptr) {
       this->name = name;
@@ -269,7 +269,7 @@ private:
   typedef bool(*compFunctions)(const Syntax::Function&, const std::vector<polisType*>&);
   typedef bool(*castFunction) (const polisType* first, const polisType* second);
 
-  static bool _compFunctions(const Syntax::Function&, const std::vector<polisType*>&, castFunction) noexcept;
+  static bool _compFunctions(const Syntax::Function&, const std::vector<polisType*>&, castFunction);
 
   Syntax::Function* _findSubstitution(std::vector<Function*>& functions, std::vector<polisType*>& parametrs,
     Token* error, castFunction cast);

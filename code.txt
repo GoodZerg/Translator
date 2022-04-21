@@ -1,10 +1,75 @@
-
+fn main() -> si32 {
+	return 123;
+}
+si32 kkkkkkk = 'a';
+fn nn(si32 a = 5)->void;
+fn nn(si32 a)->void {
+}
+fn nn(si32 a = 5, ui32 g = 10)->void;
+fn an(si32 a = 5)->void;
 fn an(si32 a)->si32 {
 }
-fn main(string b) -> void {
+fn main(string b = "10") -> void {
+si32 cc = 0;
 an();
-return;
+	return;
 }
+struct kk <>;
+fn ha(f128 h = 5 * 5 - 5) -> kk {
+	kk j;
+	si32 mm = 5;
+	for (char c = 5; c < 'z'; ++c) {
+		print(5+'n'*h/10 - 'a');
+	}
+	return j;
+}
+ui32* a = 0;
+ui32 b = 10, c, d = 100 + 100;
+struct j <char b = 10 * 10, string f = "123" >;
 
+fn bb(si32 a = 10 * 10 - 5, ui128 _hh = 20, ui128 k = 14)->void{
+    
+    si32 b;
+    if (a > 10 * 10) {
+    while (d + 5 == 123 & d) {
+        for(f32 a = 10; b < 10; b++){
+            foreach(j h -> b) {
+				ui32 a, b, c;
+				a = b = c;
+			}
+        }
+    }
+    } else {
+    f32 b;
+    }
+    j g;
+}
+fn j::b() -> void;
+fn j::b() -> void {}
+fn ll(ui32 g, string h) -> void {}
+fn ll(ui32 g) -> void {}
+struct b<>;
+fn j::g() -> j;
+fn j::g() -> j {}
+struct ha<f32 g = 5>;
+struct nice<ha h>;
+struct hello<ui32 a>;
+ui32* g = &c - (c * d) + a[10 ^ 10 / 20];
+hello gh;
+ui32 rr = gh.a;
+
+f128 k = a[100 + 50];
+
+string f = "helloworld";
+si32 hhhh;
+si32 mm = 5;
+fn main(char c = 10) -> void {
+si32 mm = 10;
+{
+si32 mm = 5;	
+}
+}
+j* lll = 5;
+si32****** kk = 5;
 
 

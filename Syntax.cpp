@@ -179,10 +179,12 @@ Syntax::TBlock* Syntax::_parseBlock() {
 
 void Syntax::_parseExpression(Exp*& exp, std::string end_symbol) {
 	exp = new Exp(lex, end_symbol);
+#if DEBUG == 1
 	for (Token* elem : exp->polis) {
 		std::cout << elem->lexem << " ";
 	}
 	std::cout << "\n";
+#endif // DEBUG
 
 	_validatePolis(exp->polis);
 }
@@ -690,7 +692,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(elem->lexem)));
 		} else if (elem->type == Type::LITERAL) {
 			polisStack.push(std::vector<polisType*>(1, new polisType("string", true, false)));
-		} else if (elem->type == Type::CHAR) {
+		} else if (elem->type == Type::CHAR) { 
 			polisStack.push(std::vector<polisType*>(1, new polisType("char", true, false)));
 		} else if (elem->type == Type::NUMBER) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(_checkNumberType(elem->lexem), true, false)));
@@ -761,9 +763,18 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 				firstOp->isReference = false;
 				polisStack.push(std::vector<polisType*>(1, firstOp));
 			} else {
-				std::vector<polisType*> firstOperand = _polisStackTopWPop();
-				std::vector<polisType*> secondOperand = _polisStackTopWPop();
+				std::vector<polisType*> firstOperand;
+				std::vector<polisType*> secondOperand;
 				if (elem->lexem == "fn") {
+					firstOperand = _polisStackTopWPop();
+					if (firstOp->type->substr(0, 2) == "0_") {
+						firstOp->type->erase(0, 2);
+						secondOperand = firstOperand;
+						firstOperand = std::vector<polisType*>(0);
+					} else {
+						secondOperand = _polisStackTopWPop();
+						secondOp->type->erase(0, 2);
+					}
 					std::vector<Function*> functions;
 					if (i + 1 < exp.size() && exp[i + 1]->lexem[0] == '.') {
 						std::vector<polisType*> thirdOperand = _polisStackTopWPop();
@@ -833,6 +844,8 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					polisStack.push(std::vector<polisType*>(1, retType));
 					continue;
 				} else {
+					firstOperand = _polisStackTopWPop();
+					secondOperand = _polisStackTopWPop();
 					secondOp->transformVariableToType(elem);
 					if (elem->lexem == "[]") {
 						firstOp->transformVariableToType(elem);
@@ -932,7 +945,6 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 								if (secondOp->points) {
 									swap(*firstOp, *secondOp);
 								}
-								std::cout << *secondOp->type << "\n";
 								if (*secondOp->type != "signed" && *secondOp->type != "unsigned") {
 									throw SemanticError(elem, "can't cast pointer");
 								}
@@ -1361,17 +1373,17 @@ void Syntax::_castPointersType(polisType& first, polisType& second, Token* error
 	}
 }
 
-bool Syntax::_compFunctions(const Syntax::Function& function, const std::vector<polisType*>& parametrs, castFunction cast) noexcept {
+bool Syntax::_compFunctions(const Syntax::Function& function, const std::vector<polisType*>& parametrs, castFunction cast) {
+	if (function.parameters.size() < parametrs.size()) {
+		return false;
+	}
 	for (size_t i = 0; i < parametrs.size(); i++) {
-		if (function.parameters.size() <= i) {
-			return false;
-		}
-		polisType* type = new polisType(function.parameters[i]->type, true);
+		polisType* type = new polisType(function.parameters[i]->type, true, false);
 		if (!cast(type, parametrs[i])) {
 			return false;
 		}
 	}
-	if (parametrs.size() - 1 >= function.indexStartDefault) {
+	if (parametrs.size() >= function.indexStartDefault) {
 		return true;
 	}
 	return false;
