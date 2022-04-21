@@ -127,7 +127,7 @@ private:
     std::vector<_parameter*> parameters;
     TType* type;
     TBlock* body = nullptr;
-    int64_t indexStartDefault;
+    int64_t indexStartDefault = -1;
   };
   TFunction* _parseFunction(TFunction* function = nullptr);
 
