@@ -179,7 +179,7 @@ private:
     TypeStruct* belongToStruct;
     std::string name, retType;
     std::vector<Variable*> parameters;
-    int64_t indexStartDefault;
+    int64_t indexStartDefault = -1;
     bool isImplemented;
     Function(std::string& name, std::string& retType, int64_t indexStartDefault, bool isImplemented = false, TypeStruct* belongToStruct = nullptr) {
       this->name = name;

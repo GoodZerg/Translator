@@ -800,15 +800,14 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 									return false; // cannot cast pointer to not pointer
 								}
 								if (first->points) {
-									if ((first->type != second->type) || (first->bitSize != second->bitSize) ||
-										(first->points != second->points)) {
+									if (*first != *second) {
 										return false;
 									} 
 								} else {
 									if (first->isReference > second->isReference) {
 										return false; // try to pass by reference rvalue
 									}
-									if (first->type == second->type) {
+									if (*first->type == *second->type) {
 										return true;
 									} else {
 										if (first->isStruct || second->isStruct) {
@@ -817,12 +816,11 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 										if (*first->type == "string" || *second->type == "string") {
 											return false;
 										}
-										/* cast float to double (mb need)
+										//cast float to double (mb need)
 										if ((*first->type == "float" && *second->type == "char") ||
 											(*second->type == "float" && *first->type == "char")) {
 											return false;
 										}
-										*/
 									}
 								}
 								return true;
