@@ -38,6 +38,10 @@ Syntax::Syntax(Lex* lex) {
 	}
 }
 
+Syntax::TProgram* Syntax::getProgram() {
+	return _program;
+}
+
 void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 	Token* token = nullptr;
 	while (token = lex->getNextToken(), token != nullptr) {
