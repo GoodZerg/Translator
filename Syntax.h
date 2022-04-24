@@ -14,8 +14,6 @@ public:
     std::vector<TNode*> program;
   };
 
-  [[nodiscard]] TProgram* getProgram();
-
   struct TSingleKeyWord : public TNode {
     Token* keyWord = nullptr;
   };
@@ -41,6 +39,7 @@ public:
 
     struct _variable {
       Token* name;
+      std::string prefix;
       Exp* exp;
     };
 
@@ -191,6 +190,11 @@ public:
   typedef bool(*compFunctions)(const Syntax::Function&, const std::vector<polisType*>&);
   typedef bool(*castFunction) (const polisType* first, const polisType* second);
   
+  typedef std::map<std::string, std::vector<Function*>> FunctionTable;
+
+  [[nodiscard]] TProgram* getProgram();
+  [[nodiscard]] FunctionTable* getFunctionTable();
+
 private:
   Lex* lex;
 
@@ -219,10 +223,10 @@ private:
 
   static std::map<std::string, int64_t> typesCastPriop;
   
-  std::vector<TypeStruct*>                             _structsTable   = {};
-  std::vector<Variable*>                               _variablesTable = {};
-  static std::map<std::string, std::vector<Function*>> _functionsTable;
-  static SemanticTree*                                 _sRoot,* _sCurrent;
+  std::vector<TypeStruct*>  _structsTable   = {};
+  std::vector<Variable*>    _variablesTable = {};
+  static FunctionTable      _functionsTable;
+  static SemanticTree*      _sRoot,* _sCurrent;
 
   bool        _flagOfSemantic = true;
   bool        _isReturn = false;

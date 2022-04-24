@@ -15,7 +15,7 @@ return ahah;\
 #define thirdOp  thirdOperand.back()
 
 Syntax::SemanticTree *Syntax:: _sRoot = nullptr, *Syntax::_sCurrent = nullptr;
-std::map<std::string, std::vector<Syntax::Function*>> Syntax::_functionsTable = std::map< std::string, std::vector<Syntax::Function*>>();
+Syntax::FunctionTable Syntax::_functionsTable = Syntax::FunctionTable();
 
 std::map<std::string, int64_t> Syntax::typesCastPriop = {
 	{"float",    0},
@@ -40,6 +40,10 @@ Syntax::Syntax(Lex* lex) {
 
 Syntax::TProgram* Syntax::getProgram() {
 	return _program;
+}
+
+Syntax::FunctionTable* Syntax::getFunctionTable() {
+	return &_functionsTable;
 }
 
 void Syntax::_parseGeneral() {  // parse lexem to syntax tree

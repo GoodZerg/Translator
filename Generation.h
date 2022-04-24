@@ -39,6 +39,22 @@ private:
   Syntax::TProgram* _program = nullptr;
   std::vector<_param> _genResoult;
 
-  void _convertSyntaxNode(Syntax::TNode);
+  void _convertSyntaxNode(Syntax::TProgram*       elem);
+  void _convertSyntaxNode(Syntax::TSingleKeyWord* elem);
+  void _convertSyntaxNode(Syntax::TType*          elem);
+  void _convertSyntaxNode(Syntax::TBlock*         elem);
+  void _convertSyntaxNode(Syntax::TExp*           elem);
+  void _convertSyntaxNode(Syntax::TInit*          elem);
+  void _convertSyntaxNode(Syntax::TIf*            elem);
+  void _convertSyntaxNode(Syntax::TWhile*         elem);
+  void _convertSyntaxNode(Syntax::TFor*           elem);
+  void _convertSyntaxNode(Syntax::TForEach*       elem);
+  void _convertSyntaxNode(Syntax::TPrint*         elem);
+  void _convertSyntaxNode(Syntax::TRead*          elem);
+  void _convertSyntaxNode(Syntax::TFunction*      elem);
+  void _convertSyntaxNode(Syntax::TStruct*        elem);
+  void _convertSyntaxNode(Syntax::TReturn*        elem);
+
+  void _makeFunctionTable(Syntax::TProgram* elem);
 
 };
