@@ -37,7 +37,7 @@ private:
   static std::map<std::string, int64_t>  _functions;
 
   Syntax::TProgram* _program = nullptr;
-  std::vector<_param> _genResoult;
+  std::vector<_upCode> _genResult;
 
   void _convertSyntaxNode(Syntax::TProgram*       elem);
   void _convertSyntaxNode(Syntax::TSingleKeyWord* elem);

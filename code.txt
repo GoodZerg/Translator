@@ -12,6 +12,7 @@ fn an(si32 a)->si32 {
 fn main(string b = "10") -> void {
 si32 cc = 0;
 an();
+nn(5,4);
 	return;
 }
 struct kk <>;

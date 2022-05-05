@@ -39,7 +39,7 @@ public:
 
     struct _variable {
       Token* name;
-      std::string prefix;
+      //std::string prefix;
       Exp* exp;
     };
 
