@@ -6,7 +6,7 @@
 #include <vector>
 #include <regex>
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define _getNextToken() lex->getNextToken() == nullptr ? throw( SyntaxError("unexpected end of file")) : (lex->decrementTokenItern(), lex->getNextToken())
 
@@ -44,8 +44,8 @@ private:
 	std::vector<Token*>::iterator _nowToken = _tokens.begin();
 
 	std::fstream _file;
-	//std::string _filePath = "D:\\Translator\\";
-	std::string _filePath = "C:\\Users\\Nik\\source\\repos\\Translator\\";
+	std::string _filePath = "D:\\Translator\\";
+	//std::string _filePath = "C:\\Users\\Nik\\source\\repos\\Translator\\";
 	std::string _fullRegex = "";
 
 	int64_t __line = 0;

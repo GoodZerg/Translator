@@ -19,7 +19,11 @@ Generation::Generation(Syntax* syntax) {
 
 void Generation::_convertSyntaxNode(Syntax::TProgram* elem) { 
   // what do we do with structures ??
-  _makeFunctionTable(elem);
+  for (auto& it : elem->program) {
+    if (dynamic_cast<Syntax::TStruct*>(it)) {
+      Syntax::TStruct* 
+    }
+  }
   return;
 }
 
@@ -79,6 +83,3 @@ void Generation::_convertSyntaxNode(Syntax::TReturn* elem) {
   return;
 }
 
-void Generation::_makeFunctionTable(Syntax::TProgram* elem) {
-  return;
-}

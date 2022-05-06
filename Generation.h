@@ -32,13 +32,22 @@ public:
 
   };
 
+  struct StructInfo {
+    struct TypeInfo {
+      int64_t offset, size;
+      std::string type;
+    };
+    std::map<std::string, TypeInfo*> fields;
+    int64_t constrAddr, size;
+  };
 private:
   static std::map<std::string, Variable> _variables;
   static std::map<std::string, int64_t>  _functions;
+  static std::map<std::string, StructInfo*> _structs;
 
   Syntax::TProgram* _program = nullptr;
   std::vector<_upCode> _genResult;
-
+  
   void _convertSyntaxNode(Syntax::TProgram*       elem);
   void _convertSyntaxNode(Syntax::TSingleKeyWord* elem);
   void _convertSyntaxNode(Syntax::TType*          elem);
@@ -54,7 +63,5 @@ private:
   void _convertSyntaxNode(Syntax::TFunction*      elem);
   void _convertSyntaxNode(Syntax::TStruct*        elem);
   void _convertSyntaxNode(Syntax::TReturn*        elem);
-
-  void _makeFunctionTable(Syntax::TProgram* elem);
 
 };

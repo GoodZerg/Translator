@@ -53,9 +53,11 @@ struct b<>;
 fn j::g() -> j;
 fn j::g() -> j {}
 struct ha<f32 g = 5>;
-struct nice<ha h>;
+struct nice<ha h>;  
 struct hello<ui32 a>;
 ui32* g = &c - (c * d) + a[10 ^ 10 / 20];
+ui32** jjjjj = 0;
+ui32 sdsd = jjjjj[10][10];
 hello gh;
 ui32 rr = gh.a;
 
