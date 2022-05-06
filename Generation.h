@@ -12,15 +12,19 @@ public:
   struct _param { };
   struct _paramStr    : _param {
     std::string str;
+    _paramStr(std::string str) : str(str) {};
   };
   struct _paramInt    : _param {
     int64_t in;
+    _paramInt(int64_t in) : in(in) {};
   };
   struct _paramChar   : _param {
     char ch;
+    _paramChar(char ch) : ch(ch) {};
   };
   struct _paramFloat  : _param {
     double fl;
+    _paramFloat(double fl) : fl(fl) {};
   };
 
   struct _upCode {
@@ -34,7 +38,7 @@ public:
 
   struct StructInfo {
     struct TypeInfo {
-      int64_t offset = 0, size = 0, points = 0;
+      int64_t offset = 0, size = 0, points = 0, baseStep = 0;
       std::string type = "";
       bool isReference;
       TypeInfo(int64_t offset, std::string type);
@@ -49,16 +53,17 @@ private:
   static std::map<std::string, Variable> _variables;
   static std::map<std::string, int64_t>  _functions;
   static std::map<std::string, StructInfo*> _structs;
+  static std::vector<_upCode> _genResult;
 
   Syntax::TProgram* _program = nullptr;
-  std::vector<_upCode> _genResult;
-  
+
   void _convertSyntaxNode(Syntax::TNode*          elem);
   void _convertSyntaxNode(Syntax::TProgram*       elem);
   void _convertSyntaxNode(Syntax::TSingleKeyWord* elem);
   void _convertSyntaxNode(Syntax::TType*          elem);
   void _convertSyntaxNode(Syntax::TBlock*         elem);
   void _convertSyntaxNode(Syntax::TExp*           elem);
+  void _convertSyntaxNode(Syntax::Exp*            elem);
   void _convertSyntaxNode(Syntax::TInit*          elem);
   void _convertSyntaxNode(Syntax::TIf*            elem);
   void _convertSyntaxNode(Syntax::TWhile*         elem);
