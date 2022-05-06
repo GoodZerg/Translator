@@ -10,6 +10,10 @@ enum class UPCODES {
   //
 };
 
+std::map<std::string, Generation::StructInfo*> Generation::_structs = {
+
+};
+
 std::map<std::string, Generation::Variable> Generation::_variables = {
 
 };
@@ -28,7 +32,6 @@ void Generation::_convertSyntaxNode(Syntax::TProgram* elem) {
   for (auto& it : elem->program) {
     _convertSyntaxNode(it);
   }
-  return;
 }
 
 void Generation::_convertSyntaxNode(Syntax::TNode* elem) {
@@ -96,7 +99,8 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
   return;
 }
 
-void Generation::_convertSyntaxNode(Syntax::TStruct* elem) { 
+void Generation::_convertSyntaxNode(Syntax::TStruct* elem) {
+  _structs[elem->name->lexem] = new StructInfo(_genResult.size(), elem);
   return;
 }
 
@@ -104,3 +108,21 @@ void Generation::_convertSyntaxNode(Syntax::TReturn* elem) {
   return;
 }
 
+Generation::StructInfo::StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct) {
+  this->constrAddr = constrAddr;
+  this->size = 0;
+  for (auto& elem : tstruct->parameters) {
+    Generation::StructInfo::TypeInfo* typeInfo =
+    fields[elem->name->lexem] = new TypeInfo(this->size, elem->type->typrStr);
+    Syntax::_countAndRemovePoints(&typeInfo->type, typeInfo->points, typeInfo->isReference);
+    Syntax::_countBitSize(&typeInfo->type, typeInfo->size);
+    typeInfo->points >>= 3;
+    Syntax::_transformToBaseType(&typeInfo->type);
+    this->size += typeInfo->size;
+  }
+}
+
+Generation::StructInfo::TypeInfo::TypeInfo(int64_t offset, std::string type) {
+  this->offset = offset;
+  this->type = type;
+}

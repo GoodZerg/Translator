@@ -34,12 +34,17 @@ public:
 
   struct StructInfo {
     struct TypeInfo {
-      int64_t offset, size;
-      std::string type;
+      int64_t offset = 0, size = 0, points = 0;
+      std::string type = "";
+      bool isReference;
+      TypeInfo(int64_t offset, std::string type);
     };
     std::map<std::string, TypeInfo*> fields;
-    int64_t constrAddr, size;
+    int64_t constrAddr = -1, size = 0;
+    StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct);
+
   };
+
 private:
   static std::map<std::string, Variable> _variables;
   static std::map<std::string, int64_t>  _functions;
