@@ -48,6 +48,7 @@ private:
   Syntax::TProgram* _program = nullptr;
   std::vector<_upCode> _genResult;
   
+  void _convertSyntaxNode(Syntax::TNode*          elem);
   void _convertSyntaxNode(Syntax::TProgram*       elem);
   void _convertSyntaxNode(Syntax::TSingleKeyWord* elem);
   void _convertSyntaxNode(Syntax::TType*          elem);
