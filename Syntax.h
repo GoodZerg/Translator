@@ -160,12 +160,11 @@ public:
     polisType(std::string type, bool isType = false, bool isReference = true);
     ~polisType();
 
-    void countAndRemovePoints();
-    void countBitSize();
+    inline void countAndRemovePoints() { _countAndRemovePoints(type, points, isReference); };
+    inline void countBitSize()         { _countBitSize        (type, bitSize); };
+    inline void transformToBaseType()  { _transformToBaseType (type); };
 
-    void transformToBaseType();
     void transformVariableToType(Token* error);
-
     void validateType();
 
     friend void swap(polisType& first, polisType& second) {
@@ -194,6 +193,10 @@ public:
 
   [[nodiscard]] TProgram* getProgram();
   [[nodiscard]] FunctionTable* getFunctionTable();
+
+  static void _countAndRemovePoints(std::string* type, int64_t& points, bool& isReference);
+  static void _countBitSize(std::string* type, int64_t& bitSize);
+  static void _transformToBaseType(std::string* type);
 
 private:
   Lex* lex;

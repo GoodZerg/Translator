@@ -1150,7 +1150,7 @@ Syntax::polisType::~polisType() {
 	delete type;
 }
 
-void Syntax::polisType::countAndRemovePoints() {
+void Syntax::_countAndRemovePoints(std::string* type, int64_t& points, bool& isReference ) {
 	for(char elem : *type) {
 		if (elem == '*') {
 			++points;
@@ -1162,7 +1162,7 @@ void Syntax::polisType::countAndRemovePoints() {
 		points + ((*type)[type->size() - 1] == '&' ? 1 : 0));
 }
 
-void Syntax::polisType::countBitSize() {
+void Syntax::_countBitSize(std::string* type, int64_t& bitSize) {
 	if(*type == "char" || *type == "bool") {
 		bitSize = 8;
 	} else if(*type == "si16" || *type == "ui16") {
@@ -1178,7 +1178,7 @@ void Syntax::polisType::countBitSize() {
 	}
 }
 
-void Syntax::polisType::transformToBaseType() {
+void Syntax::_transformToBaseType(std::string* type) {
 	if(*type == "si8" || *type == "si16" || *type == "si32" || *type == "si64" || *type == "si128") {
 		*type = "signed";
 	} else if(*type == "ui8" || *type == "ui16" || *type == "ui32" || *type == "ui64" || *type == "ui128") {
