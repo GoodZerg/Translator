@@ -28,7 +28,7 @@ public:
   };
 
   struct _upCode {
-    UPCODES _code;
+    UPCODES code;
     _param param;
   };
 
@@ -40,7 +40,7 @@ public:
     struct TypeInfo {
       int64_t offset = 0, size = 0, points = 0, baseStep = 0;
       std::string type = "";
-      bool isReference;
+      bool isReference, isStruct = false;
       TypeInfo(int64_t offset, std::string type);
     };
     std::map<std::string, TypeInfo*> fields;
@@ -57,22 +57,22 @@ private:
 
   Syntax::TProgram* _program = nullptr;
 
-  void _convertSyntaxNode(Syntax::TNode*          elem);
-  void _convertSyntaxNode(Syntax::TProgram*       elem);
-  void _convertSyntaxNode(Syntax::TSingleKeyWord* elem);
-  void _convertSyntaxNode(Syntax::TType*          elem);
-  void _convertSyntaxNode(Syntax::TBlock*         elem);
-  void _convertSyntaxNode(Syntax::TExp*           elem);
-  void _convertSyntaxNode(Syntax::Exp*            elem);
-  void _convertSyntaxNode(Syntax::TInit*          elem);
-  void _convertSyntaxNode(Syntax::TIf*            elem);
-  void _convertSyntaxNode(Syntax::TWhile*         elem);
-  void _convertSyntaxNode(Syntax::TFor*           elem);
-  void _convertSyntaxNode(Syntax::TForEach*       elem);
-  void _convertSyntaxNode(Syntax::TPrint*         elem);
-  void _convertSyntaxNode(Syntax::TRead*          elem);
-  void _convertSyntaxNode(Syntax::TFunction*      elem);
-  void _convertSyntaxNode(Syntax::TStruct*        elem);
-  void _convertSyntaxNode(Syntax::TReturn*        elem);
-
+  static void _convertSyntaxNode                 (Syntax::TNode*          elem);
+  static void _convertSyntaxNode                 (Syntax::TProgram*       elem);
+  static void _convertSyntaxNode                 (Syntax::TSingleKeyWord* elem);
+  static void _convertSyntaxNode                 (Syntax::TType*          elem);
+  static void _convertSyntaxNode                 (Syntax::TBlock*         elem);
+  static void _convertSyntaxNode                 (Syntax::TExp*           elem);
+  static void _convertSyntaxNode_WithSeparate    (Syntax::Exp*            elem);
+  static void _convertSyntaxNode                 (Syntax::Exp*            elem);
+  static void _convertSyntaxNode                 (Syntax::TInit*          elem);
+  static void _convertSyntaxNode                 (Syntax::TIf*            elem);
+  static void _convertSyntaxNode                 (Syntax::TWhile*         elem);
+  static void _convertSyntaxNode                 (Syntax::TFor*           elem);
+  static void _convertSyntaxNode                 (Syntax::TForEach*       elem);
+  static void _convertSyntaxNode                 (Syntax::TPrint*         elem);
+  static void _convertSyntaxNode                 (Syntax::TRead*          elem);
+  static void _convertSyntaxNode                 (Syntax::TFunction*      elem);
+  static void _convertSyntaxNode                 (Syntax::TStruct*        elem);
+  static void _convertSyntaxNode                 (Syntax::TReturn*        elem);
 };
