@@ -11,9 +11,10 @@ public:
 
   std::vector<Token*> polis;
 private:
-  void _detectAction(Token* currentToken, Token* previosToken, std::deque<Token*>& deque);
+  void _detectAction(Token*& currentToken, Token*& previosToken, std::deque<Token*>& deque);
 
   void _addToPolis(Token* token);
+  void _addToPolis(std::string s);
   void _pushToDeque(Token* token, std::deque<Token*>& deque);
   void _checkErrors(Token* currentToken, Token* previosToken);
   void _checkUnary(Token* currentToken, Token* previosToken);

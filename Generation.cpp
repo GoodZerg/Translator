@@ -73,7 +73,7 @@ std::map<std::string, UPCODES> Generation::_operations = {
   {"|=",  UPCODES::BIT_OR_ASSIGN},
   {"^=",  UPCODES::POWER_ASSIGN},
   {"=",   UPCODES::ASSIGN},
-  {",",   UPCODES::ÑOMMA}
+  {",",   UPCODES::COMMA}
 };
 
 std::map<std::string, Generation::StructInfo*> Generation::_structs = {
