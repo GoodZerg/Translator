@@ -198,6 +198,7 @@ public:
   static void _countBitSize(std::string* type, int64_t& bitSize);
   static void _transformToBaseType(std::string* type);
 
+  static std::string  _checkNumberType(std::string& type);
 private:
   Lex* lex;
 
@@ -240,7 +241,6 @@ private:
   bool         _checkFunctionInTable(Function* function, Token* errorPoint = nullptr, 
                  std::map<std::string, std::vector<Function*>>& functionsTable = _functionsTable); // return true if replace prototype
   void         _checkVariableExistance(SemanticTree* tree, std::string& name, std::string& type);
-  std::string  _checkNumberType(std::string& type);
 
   void _addStructToTable(TStruct* tstruct);
   void _addFunctionToTable(TFunction* function, Token* errorPoint = nullptr);

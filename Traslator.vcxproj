@@ -141,6 +141,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EnumToString.cpp" />
     <ClCompile Include="ExpParser.cpp" />
     <ClCompile Include="Generation.cpp" />
     <ClCompile Include="Lex.cpp" />
@@ -149,11 +150,13 @@
     <ClCompile Include="SyntaxError.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EnumToString.h" />
     <ClInclude Include="ExpParser.h" />
     <ClInclude Include="Generation.h" />
     <ClInclude Include="Lex.h" />
     <ClInclude Include="Syntax.h" />
     <ClInclude Include="SyntaxError.h" />
+    <ClInclude Include="Upcodes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,14 +2,17 @@
 
 #include "Syntax.h"
 
-enum class UPCODES;
 
+#include "Upcodes.h"
 
 class Generation {
 public:
   Generation(Syntax* syntax);
 
-  struct _param { };
+  struct _param {
+    _param() {};
+    virtual ~_param() {};
+  };
   struct _paramStr    : _param {
     std::string str;
     _paramStr(std::string str) : str(str) {};
@@ -23,13 +26,13 @@ public:
     _paramChar(char ch) : ch(ch) {};
   };
   struct _paramFloat  : _param {
-    double fl;
-    _paramFloat(double fl) : fl(fl) {};
+    long double fl;
+    _paramFloat(long double fl) : fl(fl) {};
   };
 
   struct _upCode {
     UPCODES code;
-    _param param;
+    _param* param;
   };
 
   struct Variable {
@@ -50,6 +53,8 @@ public:
   };
 
 private:
+  static std::map<std::string, UPCODES> _operations;
+
   static std::map<std::string, Variable> _variables;
   static std::map<std::string, int64_t>  _functions;
   static std::map<std::string, StructInfo*> _structs;
