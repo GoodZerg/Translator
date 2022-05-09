@@ -9,6 +9,13 @@ class Generation {
 public:
   Generation(Syntax* syntax);
 
+  struct TypeInfo {
+    int64_t offset = 0, size = 0, points = 0, baseStep = 0;
+    std::string type = "";
+    bool isReference, isStruct = false;
+    TypeInfo(int64_t offset, std::string type);
+  };
+
   struct _param {
     _param() {};
     virtual ~_param() {};
@@ -40,23 +47,17 @@ public:
   };
 
   struct StructInfo {
-    struct TypeInfo {
-      int64_t offset = 0, size = 0, points = 0, baseStep = 0;
-      std::string type = "";
-      bool isReference, isStruct = false;
-      TypeInfo(int64_t offset, std::string type);
-    };
     std::map<std::string, TypeInfo*> fields;
     int64_t constrAddr = -1, size = 0;
     StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct);
-
   };
 
 private:
   static std::map<std::string, UPCODES> _operations;
 
-  static std::map<std::string, Variable> _variables;
   static std::map<std::string, int64_t>  _functions;
+  static std::map<std::string, std::vector<Syntax::_parameter*>*> _functionsDefaultsValue;
+
   static std::map<std::string, StructInfo*> _structs;
   static std::vector<_upCode> _genResult;
 

@@ -91,6 +91,7 @@ public:
   struct TFunction : TNode {
     Token* nameStruct = nullptr;
     Token* nameFunction;
+    std::string preffix = "";
     std::vector<_parameter*> parameters;
     TType* type;
     TBlock* body = nullptr;
