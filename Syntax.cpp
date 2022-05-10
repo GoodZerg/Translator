@@ -1233,9 +1233,7 @@ void Syntax::polisType::transformVariableToType(Token* error) {
 		}
 		this->token->lexem = *second;
 
-		countAndRemovePoints();
-		countBitSize();
-		transformToBaseType();
+		validateType();
 	}
 }
 
