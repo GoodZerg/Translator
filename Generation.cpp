@@ -188,7 +188,47 @@ void Generation::_convertSyntaxNode(Syntax::Exp* elem) {
 
 
 void Generation::_convertSyntaxNode(Syntax::TInit* elem) {
+  auto typeInfo = new TypeInfo(0, elem->type->typrStr);
+  Syntax::_countAndRemovePoints(&typeInfo->type, typeInfo->points, typeInfo->isReference);
+  if (_structs.contains(typeInfo->type)) {
+    typeInfo->isStruct = true;
+    typeInfo->size = _structs[typeInfo->type]->size;
+    if (typeInfo->points == 0) {
+      for (auto& it : elem->variables) {
+        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size() + 3);
+        PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_STRING, typeInfo->type);
+        PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_STRING, *it->preffix);
+        PUSH_UPCODE_INT_PARAM(UPCODES::CREATE_STRUCT, _structs[typeInfo->type]->constrAddr);
 
+        if (it->exp) {
+          _convertSyntaxNode(it->exp);
+          PUSH_UPCODE(UPCODES::POP);
+        }
+      }
+      return;
+    }
+  }
+
+  Syntax::_countBitSize(&typeInfo->type, typeInfo->size);
+  typeInfo->size >>= 3;
+  if (typeInfo->points) {
+    typeInfo->baseStep = typeInfo->size;
+    typeInfo->size = 8;
+  }
+  Syntax::_transformToBaseType(&typeInfo->type);
+
+  for (auto& it : elem->variables) {
+    PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
+    PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->points);
+    PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_INT, typeInfo->type);
+    PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->isReference);
+    PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE, *it->preffix);
+
+    if (it->exp) {
+      _convertSyntaxNode(it->exp);
+      PUSH_UPCODE(UPCODES::POP);
+    }
+  }
 }
 
 void Generation::_convertSyntaxNode(Syntax::TIf* elem) { 
@@ -251,7 +291,9 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
         typeInfo->isStruct = true;
         typeInfo->size = _structs[typeInfo->type]->size;
         if (typeInfo->points == 0) {
-          PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size() + 1);
+          PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size() + 3);
+          PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_STRING, typeInfo->type);
+          PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_STRING, *it->preffix);
           PUSH_UPCODE_INT_PARAM(UPCODES::CREATE_STRUCT, _structs[typeInfo->type]->constrAddr);
         }
       }
