@@ -46,8 +46,8 @@ private:
 	std::vector<Token*>::iterator _nowToken = _tokens.begin();
 
 	std::fstream _file;
-	//std::string _filePath = "D:\\Translator\\";
-	std::string _filePath = "C:\\Users\\Nik\\source\\repos\\Translator\\";
+	std::string _filePath = "D:\\Translator\\";
+	//std::string _filePath = "C:\\Users\\Nik\\source\\repos\\Translator\\";
 	std::string _fullRegex = "";
 
 	int64_t __line = 0;

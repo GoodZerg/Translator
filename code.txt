@@ -1,13 +1,12 @@
-fn a(ui64 b = 10) -> void;
+fn a(ui64 b = 10, ui64 a = 15) -> ui32;
 
-fn b() -> void{
+fn b()->void {
 	a();
-ui64 b = 100;
-si64 c = 1;
-b/c;
 }
 
-fn a(ui64 b) -> void{
 
+fn a(ui64 b, ui64 a) -> ui32{
+	b = 5;
+	a = b + 5;
 }
 

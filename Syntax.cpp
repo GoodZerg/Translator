@@ -199,6 +199,12 @@ void Syntax::_parseExpression(Exp*& exp, std::string end_symbol) {
 #endif // DEBUG
 
 	_validatePolis(exp->polis);
+#if DEBUG == 1
+	for (Token* elem : exp->polis) {
+		std::cout << elem->lexem << " ";
+	}
+	std::cout << "\n";
+#endif // DEBUG
 }
 
 Syntax::TInit* Syntax::_parseInit() {
@@ -213,7 +219,7 @@ Syntax::TInit* Syntax::_parseInit() {
 		}
 		Token* name = token;
 
-		std::string pref = std::to_string(prefVar++);
+		std::string* pref = new std::string(std::to_string(prefVar++));
 
 		token = _getNextToken();
 		_checkVariableExistance(_sCurrent, name->lexem, pref, init->type->typrStr);
@@ -442,7 +448,7 @@ int64_t Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::stri
 		}
 		Token* name = token;
 
-		std::string pref = std::to_string(prefVar++);
+		std::string* pref = new std::string(std::to_string(prefVar++));
 
 		_checkVariableExistance(_sCurrent, name->lexem, pref, type->typrStr);
 
@@ -485,7 +491,7 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 		throw SyntaxError(token, "expected id");
 	}
 	function->nameFunction = token; // add in table with pointer
-	function->preffix = "0" + std::to_string(prefFn++);
+	function->preffix = new std::string("0" + std::to_string(prefFn++));
 	token = _getNextToken();
 	if (token->lexem != "(") {
 		throw SyntaxError(token, "expected (");
@@ -522,9 +528,12 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 		return function;
 	}
 	lex->decrementTokenItern();
-	function->body = _parseBlock();
+	function->body = (Syntax::TBlock*)1;
 
 	_addFunctionToTable(function, function->nameFunction);
+
+	function->body = _parseBlock();
+
 
 	return function;
 }
@@ -667,7 +676,7 @@ bool Syntax::_checkFunctionInTable(Function* function, Token* errorPoint,
 					if (elem->indexStartDefault > function->indexStartDefault) {
 						elem->indexStartDefault = function->indexStartDefault;
 					}
-					function->preffix = elem->preffix;
+					*function->preffix = *elem->preffix;
 					return true;
 				}
 				//throw _SemanticError("double prototype");
@@ -687,11 +696,11 @@ bool Syntax::_checkFunctionInTable(Function* function, Token* errorPoint,
 	return false;
 }
 
-void Syntax::_addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& preffix, std::string& type) {
+void Syntax::_addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string* preffix, std::string& type) {
 	tree->localVariables.push_back(new Variable(name, type, preffix, _findTypeStruct(type)));
 }
 
-void Syntax::_checkVariableExistance(SemanticTree* tree, std::string& name, std::string& preffix, std::string& type) {
+void Syntax::_checkVariableExistance(SemanticTree* tree, std::string& name, std::string* preffix, std::string& type) {
 	for (Variable* elem : tree->localVariables) {
 		if (elem->name == name) {
 			throw _SemanticError("double variable definition");
@@ -858,7 +867,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					if (calledFunction == nullptr) {
 						throw SemanticError(elem, "unknown function call");
 					}
-					secondOp->token->lexem = calledFunction->preffix;
+					secondOp->token->lexem = *calledFunction->preffix;
 					polisType* retType = new polisType(calledFunction->retType,nullptr, true);
 					polisStack.push(std::vector<polisType*>(1, retType));
 					continue;
@@ -1141,7 +1150,7 @@ std::string Syntax::_checkNumberType(std::string& type) {
 	return std::string("ui128");
 }
 
-std::string* Syntax::_findVariableInTree(std::string* name, bool& isStruct) {
+std::pair<std::string*, std::string*> Syntax::_findVariableInTree(std::string* name, bool& isStruct) {
 	return __findVariableInTree(name, Syntax::_sCurrent, isStruct);
 }
 
@@ -1204,10 +1213,12 @@ void Syntax::polisType::transformVariableToType(Token* error) {
 	if(this->isType == false) {
 		this->isType = true;
 
-		this->type = _findVariableInTree(this->type, this->isStruct);
-		if(this->type == nullptr) {
+		auto[first, second] = _findVariableInTree(this->type, this->isStruct);
+		this->type = first;
+		if (this->type == nullptr) {
 			throw SemanticError(error, "unknown variable");
 		}
+		this->token->lexem = *second;
 
 		countAndRemovePoints();
 		countBitSize();
@@ -1267,14 +1278,14 @@ Syntax::polisType& Syntax::polisType::operator=(polisType& second) {
 	return *this;
 }
 
-std::string* Syntax::__findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct) {
+std::pair<std::string*, std::string*> Syntax::__findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct) {
 	for(Variable* elem : node->localVariables) {
 		if(elem->name == *name) {
-			return elem->typest != nullptr ? (isStruct = true, new std::string(elem->type)) : new std::string(elem->type);
+			return { elem->typest != nullptr ? (isStruct = true, new std::string(elem->type)) : new std::string(elem->type), elem->preffix };
 		}
 	}
 	if(node->parent == nullptr) {
-		return nullptr;
+		return { nullptr, nullptr };
 	}
 	return __findVariableInTree(name, node->parent, isStruct);
 }

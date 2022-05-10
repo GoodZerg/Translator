@@ -39,7 +39,7 @@ public:
 
     struct _variable {
       Token* name;
-      std::string prefix = "";
+      std::string* prefix;
       Exp* exp;
     };
 
@@ -85,14 +85,14 @@ public:
   struct _parameter {
     TType* type;
     Token* name;
-    std::string preffix = "";
+    std::string* preffix;
     Exp* exp;
   };
 
   struct TFunction : TNode {
     Token* nameStruct = nullptr;
     Token* nameFunction;
-    std::string preffix = "";
+    std::string* preffix;
     std::vector<_parameter*> parameters;
     TType* type;
     TBlock* body = nullptr;
@@ -121,9 +121,9 @@ public:
 
   struct Variable {
     TypeStruct* typest;
-    std::string preffix;
+    std::string* preffix;
     std::string name, type;
-    Variable(std::string& name, std::string& type, std::string& preffix, TypeStruct* typest = nullptr) {
+    Variable(std::string& name, std::string& type, std::string* preffix, TypeStruct* typest = nullptr) {
       this->name = name;
       this->type = type;
       this->preffix = preffix;
@@ -134,11 +134,11 @@ public:
   struct Function {
     TypeStruct* belongToStruct;
     std::string name, retType;
-    std::string preffix;
+    std::string* preffix;
     std::vector<Variable*> parameters;
     int64_t indexStartDefault = 0;
     bool isImplemented;
-    Function(std::string& name, std::string& retType, int64_t indexStartDefault, std::string& preffix, bool isImplemented = false, TypeStruct* belongToStruct = nullptr) {
+    Function(std::string& name, std::string& retType, int64_t indexStartDefault, std::string* preffix, bool isImplemented = false, TypeStruct* belongToStruct = nullptr) {
       this->name = name;
       this->retType = retType;
       this->indexStartDefault = indexStartDefault;
@@ -249,14 +249,15 @@ private:
   bool         _checkSecondID(Token* token); //check next token is ID(Exp or TypeStructInit)
   bool         _checkFunctionInTable(Function* function, Token* errorPoint = nullptr, 
                  std::map<std::string, std::vector<Function*>>& functionsTable = _functionsTable); // return true if replace prototype
-  void         _checkVariableExistance(SemanticTree* tree, std::string& name, std::string& preffix, std::string& type);
+  void         _checkVariableExistance(SemanticTree* tree, std::string& name, std::string* preffix, std::string& type);
 
   void _addStructToTable(TStruct* tstruct);
   void _addFunctionToTable(TFunction* function, Token* errorPoint = nullptr);
-  void _addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& preffix, std::string& type);
+  void _addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string* preffix, std::string& type);
   
-  static std::string*             _findVariableInTree(std::string* name, bool& isStruct);
-  static std::string*             __findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct);
+  static std::pair<std::string*, std::string*>            _findVariableInTree(std::string* name, bool& isStruct);
+  static std::pair<std::string*, std::string*>            __findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct);
+
   std::string*                    _findVariableInStruct(std::string& type, std::string& variable);
   TypeStruct*                     _findTypeStruct(std::string& type);
   std::vector<Syntax::Function*>& _findFunctionInStruct(std::string& type, std::string& function);

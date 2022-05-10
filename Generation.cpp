@@ -215,12 +215,12 @@ void Generation::_convertSyntaxNode(Syntax::TRead* elem) {
 }
 
 void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
-  _functions[elem->preffix] = elem->body ? _genResult.size() : -1;
+  _functions[*elem->preffix] = elem->body ? _genResult.size() : -1;
   if (elem->body) {
     auto parameters = &elem->parameters;
-    if (_functionsDefaultsValue.contains(elem->preffix)) {
+    if (_functionsDefaultsValue.contains(*elem->preffix)) {
       bool flag = false;
-      auto vec = _functionsDefaultsValue[elem->preffix];
+      auto vec = _functionsDefaultsValue[*elem->preffix];
       for (auto& it : *vec) {
         if (it->exp) {
           flag = true;
@@ -228,6 +228,9 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
         }
       }
       if (flag) {
+        for (size_t i = 0; i < parameters->size(); ++i) {
+          vec->at(i)->preffix = parameters->at(i)->preffix;
+        }
         parameters = vec;
       }
     }
@@ -255,7 +258,7 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
         PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->points);
         PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_INT, typeInfo->type);
         PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->isReference);
-        PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE, it->name->lexem);
+        PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE, *it->preffix);
       }
       if (it->exp) {
         _convertSyntaxNode(it->exp);
@@ -266,7 +269,7 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
 
     PUSH_UPCODE(UPCODES::END);
   } else {
-    _functionsDefaultsValue[elem->preffix] = &elem->parameters;
+    _functionsDefaultsValue[*elem->preffix] = &elem->parameters;
   }
 }
 
@@ -313,7 +316,7 @@ Generation::StructInfo::StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct)
       PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->points);
       PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_INT, typeInfo->type);
       PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->isReference);
-      PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE_WITHOUT_CREATE, elem->name->lexem);
+      PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE_WITHOUT_CREATE, *elem->preffix);
     }
 
     PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
