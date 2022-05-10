@@ -39,7 +39,7 @@ public:
 
     struct _variable {
       Token* name;
-      //std::string prefix = "";
+      std::string prefix = "";
       Exp* exp;
     };
 
@@ -85,6 +85,7 @@ public:
   struct _parameter {
     TType* type;
     Token* name;
+    std::string preffix = "";
     Exp* exp;
   };
 
@@ -120,10 +121,12 @@ public:
 
   struct Variable {
     TypeStruct* typest;
+    std::string preffix;
     std::string name, type;
-    Variable(std::string& name, std::string& type, TypeStruct* typest = nullptr) {
+    Variable(std::string& name, std::string& type, std::string& preffix, TypeStruct* typest = nullptr) {
       this->name = name;
       this->type = type;
+      this->preffix = preffix;
       this->typest = typest;
     }
   };
@@ -131,13 +134,15 @@ public:
   struct Function {
     TypeStruct* belongToStruct;
     std::string name, retType;
+    std::string preffix;
     std::vector<Variable*> parameters;
     int64_t indexStartDefault = 0;
     bool isImplemented;
-    Function(std::string& name, std::string& retType, int64_t indexStartDefault, bool isImplemented = false, TypeStruct* belongToStruct = nullptr) {
+    Function(std::string& name, std::string& retType, int64_t indexStartDefault, std::string& preffix, bool isImplemented = false, TypeStruct* belongToStruct = nullptr) {
       this->name = name;
       this->retType = retType;
       this->indexStartDefault = indexStartDefault;
+      this->preffix = preffix;
       this->belongToStruct = belongToStruct;
       this->isImplemented = isImplemented;
     }
@@ -154,11 +159,12 @@ public:
 
   struct polisType {
     std::string* type;
+    Token* token;
     int64_t bitSize;
     int64_t points;
     bool isType, isReference, isStruct;
 
-    polisType(std::string type, bool isType = false, bool isReference = true);
+    polisType(std::string type, Token* token, bool isType = false, bool isReference = true);
     ~polisType();
 
     inline void countAndRemovePoints() { _countAndRemovePoints(type, points, isReference); };
@@ -205,6 +211,8 @@ private:
 
   TProgram* _program;
   
+  int64_t prefVar = 1, prefFn = 1;
+
   void              _parseGeneral();
   void              _parseExpression(Exp*& exp, std::string end_symbol);
   int64_t           _parseParameters(std::vector<_parameter*>& parameters, std::string end_symbol);
@@ -241,11 +249,11 @@ private:
   bool         _checkSecondID(Token* token); //check next token is ID(Exp or TypeStructInit)
   bool         _checkFunctionInTable(Function* function, Token* errorPoint = nullptr, 
                  std::map<std::string, std::vector<Function*>>& functionsTable = _functionsTable); // return true if replace prototype
-  void         _checkVariableExistance(SemanticTree* tree, std::string& name, std::string& type);
+  void         _checkVariableExistance(SemanticTree* tree, std::string& name, std::string& preffix, std::string& type);
 
   void _addStructToTable(TStruct* tstruct);
   void _addFunctionToTable(TFunction* function, Token* errorPoint = nullptr);
-  void _addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& type);
+  void _addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& preffix, std::string& type);
   
   static std::string*             _findVariableInTree(std::string* name, bool& isStruct);
   static std::string*             __findVariableInTree(std::string* name, SemanticTree* node, bool& isStruct);

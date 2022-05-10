@@ -36,6 +36,7 @@ class Lex {
 public:
 	Lex(char * input);
 	Token* getNextToken();
+	std::vector<Token*>* getTokenStart() { return &_tokens; };
 	void decrementTokenItern(int64_t n = 1);
 private:
 	void scan(std::string line);
@@ -45,8 +46,8 @@ private:
 	std::vector<Token*>::iterator _nowToken = _tokens.begin();
 
 	std::fstream _file;
-	std::string _filePath = "D:\\Translator\\";
-	//std::string _filePath = "C:\\Users\\Nik\\source\\repos\\Translator\\";
+	//std::string _filePath = "D:\\Translator\\";
+	std::string _filePath = "C:\\Users\\Nik\\source\\repos\\Translator\\";
 	std::string _fullRegex = "";
 
 	int64_t __line = 0;

@@ -69,6 +69,10 @@ void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 			throw SyntaxError(token, "unexpected expression");
 		}
 	}
+  
+	for (auto it : *lex->getTokenStart()) {
+		std::cout << it->lexem << " ";
+	}
 }
 
 Syntax::TSingleKeyWord* Syntax::_parseSingleKeyWord() {
@@ -208,16 +212,19 @@ Syntax::TInit* Syntax::_parseInit() {
 			throw SyntaxError(token, "expected id");
 		}
 		Token* name = token;
+
+		std::string pref = std::to_string(prefVar++);
+
 		token = _getNextToken();
-		_checkVariableExistance(_sCurrent, name->lexem, init->type->typrStr);
+		_checkVariableExistance(_sCurrent, name->lexem, pref, init->type->typrStr);
 
 		if (token->lexem == ",") {
-			init->variables.push_back(new TInit::_variable{ name, nullptr });
+			init->variables.push_back(new TInit::_variable{ name, pref, nullptr });
 			continue;
 		}
 
 		if (token->lexem == "=") {
-			init->variables.push_back(new TInit::_variable{ name, nullptr });
+			init->variables.push_back(new TInit::_variable{ name, pref, nullptr });
 			_parseExpression(init->variables[init->variables.size() - 1]->exp, "init");
 			token = _getNextToken();
 			if (token->lexem == ",") {
@@ -231,7 +238,7 @@ Syntax::TInit* Syntax::_parseInit() {
 		if (token->lexem != ";") {
 			throw SyntaxError(token, "expected ;");
 		}
-		init->variables.push_back(new TInit::_variable{ name, nullptr });
+		init->variables.push_back(new TInit::_variable{ name, pref, nullptr });
 		return init;
 	} while (true);
 }
@@ -435,25 +442,27 @@ int64_t Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::stri
 		}
 		Token* name = token;
 
-		_checkVariableExistance(_sCurrent, name->lexem, type->typrStr);
+		std::string pref = std::to_string(prefVar++);
+
+		_checkVariableExistance(_sCurrent, name->lexem, pref, type->typrStr);
 
 		if (flag) {
 			token = _getNextToken();
 			if (token->lexem == "=") {
 				flag = false;
-				parameters.push_back(new _parameter{ type, name, nullptr });
+				parameters.push_back(new _parameter{ type, name, pref,  nullptr });
 				_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
 				token = _getNextToken(); 
 				continue;
 			}
 			++index;
-			parameters.push_back(new _parameter{ type, name, nullptr });
+			parameters.push_back(new _parameter{ type, name, pref, nullptr });
 		} else {
 			token = _getNextToken();
 			if (token->lexem != "=") {
 				throw SyntaxError(token, "expected =");
 			}
-			parameters.push_back(new _parameter{ type, name, nullptr });
+			parameters.push_back(new _parameter{ type, name, pref, nullptr });
 			_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
 			token = _getNextToken();
 		}
@@ -476,7 +485,7 @@ Syntax::TFunction* Syntax::_parseFunction(TFunction* function) {
 		throw SyntaxError(token, "expected id");
 	}
 	function->nameFunction = token; // add in table with pointer
-
+	function->preffix = "0" + std::to_string(prefFn++);
 	token = _getNextToken();
 	if (token->lexem != "(") {
 		throw SyntaxError(token, "expected (");
@@ -629,7 +638,7 @@ void Syntax::_addStructToTable(TStruct* tstruct) {
 }
 
 Syntax::Variable* Syntax::_castParametrToVariable(_parameter* parametr) {
-	return new Variable(parametr->name->lexem, parametr->type->typrStr, _findTypeStruct(parametr->type->typrStr));
+	return new Variable(parametr->name->lexem, parametr->type->typrStr, parametr->preffix, _findTypeStruct(parametr->type->typrStr));
 }
 
 bool Syntax::_checkFunctionInTable(Function* function, Token* errorPoint, 
@@ -658,6 +667,7 @@ bool Syntax::_checkFunctionInTable(Function* function, Token* errorPoint,
 					if (elem->indexStartDefault > function->indexStartDefault) {
 						elem->indexStartDefault = function->indexStartDefault;
 					}
+					function->preffix = elem->preffix;
 					return true;
 				}
 				//throw _SemanticError("double prototype");
@@ -677,17 +687,17 @@ bool Syntax::_checkFunctionInTable(Function* function, Token* errorPoint,
 	return false;
 }
 
-void Syntax::_addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& type) {
-	tree->localVariables.push_back(new Variable(name, type, _findTypeStruct(type)));
+void Syntax::_addVariableToSemanticTree(SemanticTree* tree, std::string& name, std::string& preffix, std::string& type) {
+	tree->localVariables.push_back(new Variable(name, type, preffix, _findTypeStruct(type)));
 }
 
-void Syntax::_checkVariableExistance(SemanticTree* tree, std::string& name, std::string& type) {
+void Syntax::_checkVariableExistance(SemanticTree* tree, std::string& name, std::string& preffix, std::string& type) {
 	for (Variable* elem : tree->localVariables) {
 		if (elem->name == name) {
 			throw _SemanticError("double variable definition");
 		}
 	}
-	_addVariableToSemanticTree(tree, name, type);
+	_addVariableToSemanticTree(tree, name, preffix, type);
 	//_addVariableToTable();
 }
 
@@ -697,13 +707,13 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 	for (size_t i = 0; i < exp.size(); ++i) {
 		Token* elem = exp[i];
 		if (elem->type == Type::ID) {
-			polisStack.push(std::vector<polisType*>(1, new polisType(elem->lexem)));
+			polisStack.push(std::vector<polisType*>(1, new polisType(elem->lexem, elem)));
 		} else if (elem->type == Type::LITERAL) {
-			polisStack.push(std::vector<polisType*>(1, new polisType("string", true, false)));
+			polisStack.push(std::vector<polisType*>(1, new polisType("string", elem, true, false)));
 		} else if (elem->type == Type::CHAR) { 
-			polisStack.push(std::vector<polisType*>(1, new polisType("char", true, false)));
+			polisStack.push(std::vector<polisType*>(1, new polisType("char", elem, true, false)));
 		} else if (elem->type == Type::NUMBER) {
-			polisStack.push(std::vector<polisType*>(1, new polisType(_checkNumberType(elem->lexem), true, false)));
+			polisStack.push(std::vector<polisType*>(1, new polisType(_checkNumberType(elem->lexem), elem, true, false)));
 		} else if (elem->type == Type::OPERATOR) {
 			if (elem->lexem[0] == 's' || elem->lexem[0] == 'p' || elem->lexem[0] == 'u') {
 				std::vector<polisType*> firstOperand = _polisStackTopWPop();
@@ -848,7 +858,8 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					if (calledFunction == nullptr) {
 						throw SemanticError(elem, "unknown function call");
 					}
-					polisType* retType = new polisType(calledFunction->retType, true);
+					secondOp->token->lexem = calledFunction->preffix;
+					polisType* retType = new polisType(calledFunction->retType,nullptr, true);
 					polisStack.push(std::vector<polisType*>(1, retType));
 					continue;
 				} else {
@@ -1100,7 +1111,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 		std::vector<polisType*> lastOperand = _polisStackTopWPop();
 		lastOperand.back()->transformVariableToType(exp.back());
 		if (_isReturn) {
-			polisType* returnType = new polisType(_returnValueType, true);
+			polisType* returnType = new polisType(_returnValueType,nullptr, true);
 			if (*lastOperand.back() == *returnType) {
 				;
 			} else if (lastOperand.back()->points && returnType->points) {
@@ -1134,8 +1145,9 @@ std::string* Syntax::_findVariableInTree(std::string* name, bool& isStruct) {
 	return __findVariableInTree(name, Syntax::_sCurrent, isStruct);
 }
 
-Syntax::polisType::polisType(std::string type, bool isType, bool isReference) {
+Syntax::polisType::polisType(std::string type, Token* token, bool isType, bool isReference) {
 	this->type = new std::string(type);
+	this->token = token;
 	this->isType = isType;
 	this->bitSize = 0;
 	this->points = 0;
@@ -1345,7 +1357,7 @@ std::vector<Syntax::Function*>& Syntax::_findFunctionInStruct(std::string& type,
 }
 
 void Syntax::_addFunctionToTable(TFunction* tFunction, Token* errorPoint) {
-	Function* sFunction = new Function(tFunction->nameFunction->lexem, tFunction->type->typrStr, tFunction->indexStartDefault);
+	Function* sFunction = new Function(tFunction->nameFunction->lexem, tFunction->type->typrStr, tFunction->indexStartDefault, tFunction->preffix);
 	for (_parameter* elem : tFunction->parameters) {
 		sFunction->parameters.push_back(_castParametrToVariable(elem));
 	}
@@ -1386,7 +1398,7 @@ bool Syntax::_compFunctions(const Syntax::Function& function, const std::vector<
 		return false;
 	}
 	for (size_t i = 0; i < parametrs.size(); i++) {
-		polisType* type = new polisType(function.parameters[i]->type, true, false);
+		polisType* type = new polisType(function.parameters[i]->type, parametrs[i]->token, true, false);
 		if (!cast(type, parametrs[i])) {
 			return false;
 		}

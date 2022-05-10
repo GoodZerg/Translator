@@ -1,3 +1,13 @@
-struct kk <ui64 a = 10>;
+fn a(ui64 b = 10) -> void;
 
+fn b() -> void{
+	a();
+ui64 b = 100;
+si64 c = 1;
+b/c;
+}
+
+fn a(ui64 b) -> void{
+
+}
 
