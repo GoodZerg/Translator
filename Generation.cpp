@@ -144,6 +144,7 @@ void Generation::_convertSyntaxNode(Syntax::TBlock* elem) {
 
 void Generation::_convertSyntaxNode(Syntax::TExp* elem) { 
   _convertSyntaxNode(elem->exp);
+  PUSH_UPCODE(UPCODES::POP);
   return;
 }
 
@@ -228,10 +229,19 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
         }
       }
       if (flag) {
+        std::map<std::string, std::string> prikol;
         for (size_t i = 0; i < parameters->size(); ++i) {
-          vec->at(i)->preffix = parameters->at(i)->preffix;
+          prikol[*vec->at(i)->preffix] = *parameters->at(i)->preffix;
+          *vec->at(i)->preffix = *parameters->at(i)->preffix;
         }
         parameters = vec;
+        for (auto& it : *parameters) {
+          for (auto& token : it->exp->polis) {
+            if (token->type == Type::ID && prikol.contains(token->lexem)) {
+              token->lexem = prikol[token->lexem];
+            }
+          }
+        }
       }
     }
     for (auto& it : *parameters) {
