@@ -456,19 +456,31 @@ int64_t Syntax::_parseParameters(std::vector<_parameter*>& parameters, std::stri
 			token = _getNextToken();
 			if (token->lexem == "=") {
 				flag = false;
-				parameters.push_back(new _parameter{ type, name, pref,  nullptr });
+				if (end_symbol == "struct") {
+					parameters.push_back(new _parameter{ type, new Token{Type::ID, name->lexem, name->_line, name->_column}, pref,  nullptr });
+				} else {
+					parameters.push_back(new _parameter{ type, name, pref,  nullptr });
+				}
 				_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
 				token = _getNextToken(); 
 				continue;
 			}
 			++index;
-			parameters.push_back(new _parameter{ type, name, pref, nullptr });
+			if (end_symbol == "struct") {
+				parameters.push_back(new _parameter{ type, new Token{Type::ID, name->lexem, name->_line, name->_column}, pref,  nullptr });
+			} else {
+				parameters.push_back(new _parameter{ type, name, pref,  nullptr });
+			}
 		} else {
 			token = _getNextToken();
 			if (token->lexem != "=") {
 				throw SyntaxError(token, "expected =");
 			}
-			parameters.push_back(new _parameter{ type, name, pref, nullptr });
+			if (end_symbol == "struct") {
+				parameters.push_back(new _parameter{ type, new Token{Type::ID, name->lexem, name->_line, name->_column}, pref,  nullptr });
+			} else {
+				parameters.push_back(new _parameter{ type, name, pref,  nullptr });
+			}
 			_parseExpression(parameters[parameters.size() - 1]->exp, end_symbol);
 			token = _getNextToken();
 		}
@@ -1238,7 +1250,6 @@ void Syntax::polisType::validateType() {
 }
 
 void Syntax::polisType::clear() {
-	delete this->type;
 	this->type = nullptr;
 	this->bitSize = 0;
 	this->points = 0;
@@ -1248,8 +1259,7 @@ void Syntax::polisType::clear() {
 }
 
 void Syntax::polisType::clear(std::string type) {
-	delete this->type;
-	this->type = new std::string(type);
+	*this->type = type;
 	this->bitSize = 0;
 	this->points = 0;
 	this->isType = true;
@@ -1268,8 +1278,7 @@ bool Syntax::polisType::operator!=(const polisType& second) const {
 }
 
 Syntax::polisType& Syntax::polisType::operator=(polisType& second) {
-	delete this->type;
-	this->type = new std::string(*second.type);
+	*this->type = *second.type;
 	this->bitSize = second.bitSize;
 	this->points = second.points;
 	this->isReference = second.isReference;

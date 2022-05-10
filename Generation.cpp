@@ -251,7 +251,7 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
         typeInfo->isStruct = true;
         typeInfo->size = _structs[typeInfo->type]->size;
         if (typeInfo->points == 0) {
-          PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size());
+          PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size() + 1);
           PUSH_UPCODE_INT_PARAM(UPCODES::CREATE_STRUCT, _structs[typeInfo->type]->constrAddr);
         }
       }
@@ -305,7 +305,7 @@ Generation::StructInfo::StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct)
       typeInfo->size = _structs[typeInfo->type]->size;
       if (typeInfo->points == 0) {
         PUSH_UPCODE(UPCODES::DUP);
-        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size());
+        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size() + 1);
         PUSH_UPCODE(UPCODES::SWAP);
         PUSH_UPCODE_INT_PARAM(UPCODES::CREATE_FIELD_STRUCT, _structs[typeInfo->type]->constrAddr);
       }
