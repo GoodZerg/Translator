@@ -12,7 +12,7 @@ public:
   struct TypeInfo {
     int64_t offset = 0, size = 0, points = 0, baseStep = 0;
     std::string type = "";
-    bool isReference, isStruct = false;
+    bool isReference = false, isStruct = false;
     TypeInfo(int64_t offset, std::string type);
   };
 

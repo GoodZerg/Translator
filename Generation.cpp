@@ -84,6 +84,10 @@ std::map<std::string, int64_t> Generation::_functions = {
 
 };
 
+std::map<std::string, std::vector<Syntax::_parameter*>*> Generation::_functionsDefaultsValue = {
+
+};
+
 std::vector<Generation::_upCode> Generation::_genResult = {
 
 };
@@ -133,7 +137,9 @@ void Generation::_convertSyntaxNode(Syntax::TType* elem) {
 }
 
 void Generation::_convertSyntaxNode(Syntax::TBlock* elem) { 
-  return;
+  for (auto& it : elem->nodes) {
+    _convertSyntaxNode(it);
+  }
 }
 
 void Generation::_convertSyntaxNode(Syntax::TExp* elem) { 
@@ -180,7 +186,8 @@ void Generation::_convertSyntaxNode(Syntax::Exp* elem) {
 }
 
 
-void Generation::_convertSyntaxNode(Syntax::TInit* elem) { 
+void Generation::_convertSyntaxNode(Syntax::TInit* elem) {
+
 }
 
 void Generation::_convertSyntaxNode(Syntax::TIf* elem) { 
@@ -210,8 +217,54 @@ void Generation::_convertSyntaxNode(Syntax::TRead* elem) {
 void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
   _functions[elem->preffix] = elem->body ? _genResult.size() : -1;
   if (elem->body) {
+    auto parameters = &elem->parameters;
+    if (_functionsDefaultsValue.contains(elem->preffix)) {
+      bool flag = false;
+      auto vec = _functionsDefaultsValue[elem->preffix];
+      for (auto& it : *vec) {
+        if (it->exp) {
+          flag = true;
+          break;
+        }
+      }
+      if (flag) {
+        parameters = vec;
+      }
+    }
+    for (auto& it : *parameters) {
+      auto typeInfo = new TypeInfo(0, it->type->typrStr);
+      Syntax::_countAndRemovePoints(&typeInfo->type, typeInfo->points, typeInfo->isReference);
+      if (_structs.contains(typeInfo->type)) {
+        typeInfo->isStruct = true;
+        typeInfo->size = _structs[typeInfo->type]->size;
+        if (typeInfo->points == 0) {
+          PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size());
+          PUSH_UPCODE_INT_PARAM(UPCODES::CREATE_STRUCT, _structs[typeInfo->type]->constrAddr);
+        }
+      }
+      if (!typeInfo->isStruct || typeInfo->points) {
+        Syntax::_countBitSize(&typeInfo->type, typeInfo->size);
+        typeInfo->size >>= 3;
+        if (typeInfo->points) {
+          typeInfo->baseStep = typeInfo->size;
+          typeInfo->size = 8;
+        }
+        Syntax::_transformToBaseType(&typeInfo->type);
 
+        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
+        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->points);
+        PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_INT, typeInfo->type);
+        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->isReference);
+        PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE, it->name->lexem);
+      }
+      if (it->exp) {
+        _convertSyntaxNode(it->exp);
+        PUSH_UPCODE(UPCODES::POP);
+      }
+    }
     _convertSyntaxNode(elem->body);
+
+    PUSH_UPCODE(UPCODES::END);
   } else {
     _functionsDefaultsValue[elem->preffix] = &elem->parameters;
   }
@@ -230,6 +283,7 @@ Generation::StructInfo::StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct)
   this->constrAddr = constrAddr;
   this->size = 0;
   for (auto& elem : tstruct->parameters) {
+    //this->size in that context is current offset for variable
     Generation::TypeInfo* typeInfo =
     fields[elem->name->lexem] = new TypeInfo(this->size, elem->type->typrStr);
     Syntax::_countAndRemovePoints(&typeInfo->type, typeInfo->points, typeInfo->isReference);
@@ -241,41 +295,30 @@ Generation::StructInfo::StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct)
         PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size());
         PUSH_UPCODE(UPCODES::SWAP);
         PUSH_UPCODE_INT_PARAM(UPCODES::CREATE_FIELD_STRUCT, _structs[typeInfo->type]->constrAddr);
-        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
-        PUSH_UPCODE(UPCODES::BINARY_ADD);
-      } else {
-        if (elem->exp) {
-          Generation::_convertSyntaxNode_WithSeparate(elem->exp);
-        }
-        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
-        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->points);
-        PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_INT, typeInfo->type);
-        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->isReference);
-        PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE, elem->name->lexem);
-
-        PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
-        PUSH_UPCODE(UPCODES::BINARY_ADD);
       }
-    } else {
+    }
+    if (!typeInfo->isStruct || typeInfo->points) {
       Syntax::_countBitSize(&typeInfo->type, typeInfo->size);
       typeInfo->size >>= 3;
+      if (typeInfo->points) {
+        typeInfo->baseStep = typeInfo->size;
+        typeInfo->size = 8;
+      }
+      Syntax::_transformToBaseType(&typeInfo->type);
       if (elem->exp) {
         Generation::_convertSyntaxNode_WithSeparate(elem->exp);
       }
+      PUSH_UPCODE(UPCODES::DUP);
       PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
       PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->points);
       PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_INT, typeInfo->type);
       PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->isReference);
-      PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE, elem->name->lexem);
+      PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE_WITHOUT_CREATE, elem->name->lexem);
+    }
 
-      PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
-      PUSH_UPCODE(UPCODES::BINARY_ADD);
-    }
-    if (typeInfo->points) {
-      typeInfo->baseStep = typeInfo->size;
-      typeInfo->size = 8;
-    }
-    Syntax::_transformToBaseType(&typeInfo->type);
+    PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
+    PUSH_UPCODE(UPCODES::BINARY_ADD);
+
     this->size += typeInfo->size;
   }
   PUSH_UPCODE(UPCODES::POP);
