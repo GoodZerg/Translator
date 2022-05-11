@@ -891,7 +891,9 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					firstOperand = _polisStackTopWPop();
 					secondOperand = _polisStackTopWPop();
 					secondOp->transformVariableToType(elem);
-					if (elem->lexem == "[]") {
+					if (elem->lexem == "cast") {
+
+					} else if (elem->lexem == "[]") {
 						firstOp->transformVariableToType(elem);
 						if (!secondOp->points) {
 							throw SemanticError(elem, "try to index not-pointer type");
