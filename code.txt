@@ -1,17 +1,9 @@
 
-fn fun(f32 b = 3)->void;
-
-struct Node<ui32 aa = 10, f32 bb = 5>;
-
-ui32 b = 10, c = 10, d = 55;
-
-si32 a = 25 * b ^ c + (d - 5);
-
-Node* point = 0;
 
 
-fn nice(f64 d = 5)->void {
-	si128 a = d * c;
-	
-	a = (*point).bb + 5;
+ui32*** a = (ui32***)5 + 6;
+
+fn ha() ->void {
+	a = (ui32)5 + 6;
+
 }
