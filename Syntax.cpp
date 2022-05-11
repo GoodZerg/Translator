@@ -1163,7 +1163,7 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 		std::vector<polisType*> lastOperand = _polisStackTopWPop();
 		lastOperand.back()->transformVariableToType(exp.back());
 		if (_isReturn) {
-			polisType* returnType = new polisType(_returnValueType,nullptr, true);
+			polisType* returnType = new polisType(_returnValueType, nullptr, true);
 			if (*lastOperand.back() == *returnType) {
 				;
 			} else if (lastOperand.back()->points && returnType->points) {
@@ -1180,7 +1180,12 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 			}
 		}
 	} else if (_isReturn && _returnValueType != "void") {
-		throw SemanticError(exp.back(), "function return wrong type");
+		if (exp.size()) {
+			throw SemanticError(exp.back(), "function return wrong type");
+		} else {
+			lex->decrementTokenItern();
+			throw SemanticError(_getNextToken(), "function return wrong type");
+		}
 	}
 }
 

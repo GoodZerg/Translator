@@ -153,6 +153,9 @@ void ExpParser::_detectAction(Token*& currentToken, Token*& previosToken, std::d
       _addToPolis(currentToken);
     } else if (currentToken->type == Type::TYPE) {
       _addToPolis(new Token{ Type::TYPE , currentToken->lexem, 0, 0, nullptr });
+      if (deque.back()->lexem == "(") {
+        deque.pop_back();
+      }
       _pushToDeque(new Token{ Type::OPERATOR , "cast", 0, 0, nullptr }, deque);
     } else if (currentToken->lexem == "+" || currentToken->lexem == "-" || currentToken->lexem == "*" ||
       currentToken->lexem == "&") {

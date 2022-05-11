@@ -37,6 +37,7 @@ if(dynamic_cast<_paramFloat*>(param)){\
 std::map<std::string, UPCODES> Generation::_operations = {
   {"fn",  UPCODES::CALL_FUNCTION},
   {"s++", UPCODES::SUFFIX_INCREMENT},
+  {"cast", UPCODES::CAST},
   {"s--", UPCODES::SUFFIX_DECREMENT},
   {".",   UPCODES::POINT},
   {"[]",  UPCODES::INDEX_OPERATOR},
@@ -162,6 +163,9 @@ void Generation::_convertSyntaxNode(Syntax::Exp* elem) {
       case Type::ID:
         PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_NAME, it->lexem);
         break;
+      case Type::TYPE:
+        PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_STRING, it->lexem);
+        break;
       case Type::NUMBER:
         if (Syntax::_checkNumberType(tmp) == "f128") {
           PUSH_UPCODE_FLOAT_PARAM(UPCODES::LOAD_CONST_FLOAT, std::stold(it->lexem));
@@ -220,7 +224,7 @@ void Generation::_convertSyntaxNode(Syntax::TInit* elem) {
   for (auto& it : elem->variables) {
     PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
     PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->points);
-    PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_INT, typeInfo->type);
+    PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_STRING, typeInfo->type);
     PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->isReference);
     PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE, *it->preffix);
 
@@ -331,7 +335,7 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
 
         PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
         PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->points);
-        PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_INT, typeInfo->type);
+        PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_STRING, typeInfo->type);
         PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->isReference);
         PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE, *it->preffix);
       }
@@ -341,7 +345,9 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
       }
     }
     _convertSyntaxNode(elem->body);
-
+    // default return value, also in void functions
+    PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, 0);
+    PUSH_UPCODE(UPCODES::SWAP);
     PUSH_UPCODE(UPCODES::END);
   } else {
     _functionsDefaultsValue[*elem->preffix] = &elem->parameters;
@@ -395,7 +401,7 @@ Generation::StructInfo::StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct)
       PUSH_UPCODE(UPCODES::DUP);
       PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->size);
       PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->points);
-      PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_INT, typeInfo->type);
+      PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_STRING, typeInfo->type);
       PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)typeInfo->isReference);
       PUSH_UPCODE_STRING_PARAM(UPCODES::INIT_VARIABLE_WITHOUT_CREATE, *elem->preffix);
     }
