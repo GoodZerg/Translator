@@ -739,6 +739,11 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(_checkNumberType(elem->lexem), elem, true, false)));
 		} else if (elem->type == Type::TYPE) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(elem->lexem, elem, true, false)));
+			if (polisStack.top().back()->isStruct) {
+				if (_findTypeStruct(*polisStack.top().back()->type) == nullptr) {
+					throw SemanticError(elem, "not existing type cast");
+				}
+			}
 		} else if (elem->type == Type::OPERATOR) {
 			if (elem->lexem[0] == 's' || elem->lexem[0] == 'p' || elem->lexem[0] == 'u') {
 				std::vector<polisType*> firstOperand = _polisStackTopWPop();
@@ -892,6 +897,26 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					secondOperand = _polisStackTopWPop();
 					secondOp->transformVariableToType(elem);
 					if (elem->lexem == "cast") {
+						firstOp->transformVariableToType(elem);
+						if((firstOp->points == secondOp->points && *secondOp->type == *firstOp->type) || 
+							(firstOp->points != 0 && secondOp->points != 0)){
+							;
+						} if (firstOp->points != 0 && (*secondOp->type == "string" || secondOp->isStruct)) {
+							throw SemanticError(elem, "try cast pointer");
+						} else if (secondOp->points != 0 && (*firstOp->type == "string" || firstOp->isStruct)) {
+							throw SemanticError(elem, "try cast to pointer");
+						} else if (secondOp->isStruct || firstOp->isStruct) {
+							throw SemanticError(elem, "try cast structs");
+						} else if (*firstOp->type == "string" ^ *secondOp->type == "string") {
+							throw SemanticError(elem, "try cast strings");
+						}
+						if (firstOp->isReference) {
+							secondOp->isReference = true;
+						}
+
+						*firstOp = *secondOp;
+
+						firstOp->isType = true;
 
 					} else if (elem->lexem == "[]") {
 						firstOp->transformVariableToType(elem);
