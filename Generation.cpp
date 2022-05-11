@@ -40,8 +40,8 @@ std::map<std::string, UPCODES> Generation::_operations = {
   {"s--", UPCODES::SUFFIX_DECREMENT},
   {".",   UPCODES::POINT},
   {"[]",  UPCODES::INDEX_OPERATOR},
-  {"p++", UPCODES::POSTFIX_INCREMENT},
-  {"p--", UPCODES::POSTFIX_DECREMENT},
+  {"p++", UPCODES::PREFFIX_INCREMENT},
+  {"p--", UPCODES::PREFFIX_DECREMENT},
   {"u+",  UPCODES::UNARY_ADD},
   {"u-",  UPCODES::UNARY_SUBSTRACTION},
   {"!",   UPCODES::LOGIC_NOT},
@@ -55,9 +55,9 @@ std::map<std::string, UPCODES> Generation::_operations = {
   {"b+",  UPCODES::BINARY_ADD},
   {"b-",  UPCODES::BINARY_SUBSTRACTION},
   {">",   UPCODES::COMPARISION_GREATER},
-  {"<",   UPCODES::COMPARISION_SMALLER},
+  {"<",   UPCODES::COMPARISION_LESS},
   {">=",  UPCODES::COMPARISION_GREATER_EQUAL},
-  {"<=",  UPCODES::COMPARISION_SMALLER_EQUAL},
+  {"<=",  UPCODES::COMPARISION_LESS_EQUAL},
   {"==",  UPCODES::COMPARISION_EQUAL},
   {"!=",  UPCODES::COMPARISION_NOT_EQUAL},
   {"b&",  UPCODES::BIT_AND},
@@ -232,11 +232,34 @@ void Generation::_convertSyntaxNode(Syntax::TInit* elem) {
 }
 
 void Generation::_convertSyntaxNode(Syntax::TIf* elem) { 
-  return;
+  _convertSyntaxNode(elem->condition);
+  PUSH_UPCODE_INT_PARAM(UPCODES::JUMP_IF_FALSE, 0);
+  int64_t* addressToJumpIfFalse = &dynamic_cast<_paramInt*>(_genResult.back().param)->in;
+  _convertSyntaxNode(elem->body);
+
+  if (elem->elseBody) {
+    PUSH_UPCODE_INT_PARAM(UPCODES::JUMP, 0);
+    int64_t* addressToJump = &dynamic_cast<_paramInt*>(_genResult.back().param)->in;
+
+    *addressToJumpIfFalse = _genResult.size();
+    _convertSyntaxNode(elem->elseBody);
+    *addressToJump = _genResult.size();
+  } else {
+    *addressToJumpIfFalse = _genResult.size();
+  }
 }
 
 void Generation::_convertSyntaxNode(Syntax::TWhile* elem) { 
-  return;
+  int64_t addressToReturn = _genResult.size();
+
+  _convertSyntaxNode(elem->condition);
+  PUSH_UPCODE_INT_PARAM(UPCODES::JUMP_IF_FALSE, 0);
+  int64_t* addressToJumpIfFalse = &dynamic_cast<_paramInt*>(_genResult.back().param)->in;
+
+  _convertSyntaxNode(elem->body);
+
+  PUSH_UPCODE_INT_PARAM(UPCODES::JUMP, addressToReturn);
+  *addressToJumpIfFalse = _genResult.size();
 }
 
 void Generation::_convertSyntaxNode(Syntax::TFor* elem) { 
@@ -330,8 +353,14 @@ void Generation::_convertSyntaxNode(Syntax::TStruct* elem) {
   return;
 }
 
-void Generation::_convertSyntaxNode(Syntax::TReturn* elem) { 
-  return;
+void Generation::_convertSyntaxNode(Syntax::TReturn* elem) {
+  if (elem->exp && elem->exp->polis.size()) {
+    _convertSyntaxNode(elem->exp);
+    PUSH_UPCODE(UPCODES::SWAP);
+    PUSH_UPCODE(UPCODES::END);
+  } else {
+    PUSH_UPCODE(UPCODES::END);
+  }
 }
 
 Generation::StructInfo::StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct) {

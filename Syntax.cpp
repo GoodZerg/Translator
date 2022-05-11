@@ -615,6 +615,7 @@ Syntax::TReturn* Syntax::_parseReturn() {
 	TReturn* treturn = new TReturn();
 	_isReturn = true;
 	_parseExpression(treturn->exp, "exp");
+	_getNextToken();
 	_isReturn = false;
 	return treturn;
 }
