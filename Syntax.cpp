@@ -737,6 +737,8 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 			polisStack.push(std::vector<polisType*>(1, new polisType("char", elem, true, false)));
 		} else if (elem->type == Type::NUMBER) {
 			polisStack.push(std::vector<polisType*>(1, new polisType(_checkNumberType(elem->lexem), elem, true, false)));
+		} else if (elem->type == Type::TYPE) {
+			polisStack.push(std::vector<polisType*>(1, new polisType(elem->lexem, elem, true, false)));
 		} else if (elem->type == Type::OPERATOR) {
 			if (elem->lexem[0] == 's' || elem->lexem[0] == 'p' || elem->lexem[0] == 'u') {
 				std::vector<polisType*> firstOperand = _polisStackTopWPop();
