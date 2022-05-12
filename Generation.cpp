@@ -291,7 +291,7 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
     if (elem->nameFunction->lexem == "main") {
       PUSH_UPCODE(UPCODES::START_PROGRAM);
       Generation::_StartProgram = _genResult.size();
-    };
+    } 
     auto parameters = &elem->parameters;
     if (_functionsDefaultsValue.contains(*elem->preffix)) {
       bool flag = false;

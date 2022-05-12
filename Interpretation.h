@@ -12,5 +12,11 @@ public:
 private:
   std::vector<std::map<std::string, VarInfo*>> _localScopes;
   std::stack<std::vector<VarInfo*>> _interpretationStack;
+
+  bool _isExecuteUpCode = true;
+
+  void _preInit();
+  void _startProgram();
+  void _executeUpCode(int64_t& upCodeIndex);
 };
 
