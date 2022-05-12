@@ -53,14 +53,99 @@ T _cast(void* pointer, int64_t size, std::string type){
 	}
 }
 
-
+	
 template <typename T, typename U>
 decltype(auto) plus(T a, U b) {
 	return a + b;
 }
+		
+#define _CHECK(a,type1,b,type2, oper, type11, size11, type22, size22) \
+type1 aa = *reinterpret_cast<type1 *>(a);\
+type2 bb = *reinterpret_cast<type2 *>(b);\
+auto c = aa oper bb;\
+std::string typee = type11;\
+int64_t sizee = size11;\
+	if (Syntax::typesCastPriop[type11] > Syntax::typesCastPriop[type22]) {\
+			typee = type22;\
+	} else if (Syntax::typesCastPriop[type11] == Syntax::typesCastPriop[type22] && size11 < size22) {\
+		sizee = size22;\
+	}\
+\
+Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{new Interpretation::VarInfo{new Generation::TypeInfo(typee, sizee), (void*)&c}});\
+\
 
-#define BINARY_OPERATIONS(a,oper,b) \
-a##oper##b
+
+#define _CAST(a,type,size, b,type2, oper, type22, size22) \
+if (type == "signed") {\
+	if (size == 2) {\
+		_CHECK(a,int16_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 4) {\
+		_CHECK(a,int32_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 8) {\
+		_CHECK(a,int64_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 16) {\
+		_CHECK(a,int64_t, b,type2, ##oper, type, size,type22, size22  )\
+	}\
+} else if (type == "unsigned") {\
+	if (size == 2) {\
+		_CHECK(a,uint16_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 4) {\
+		_CHECK(a,uint32_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 8) {\
+		_CHECK(a,uint64_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 16) {\
+		_CHECK(a,uint64_t, b,type2, ##oper, type, size,type22, size22  )\
+	}\
+} else if (type == "float") {\
+	if (size == 4) {\
+		_CHECK(a,float_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 8) {\
+		_CHECK(a,double_t, b,type2, ##oper, type, size,type22, size22 )\
+	} else if (size == 16) {\
+		_CHECK(a,double_t, b,type2, ##oper, type, size,type22, size22  )\
+	}\
+} else if (type == "char") {\
+	_CHECK(a,char, b,type2, ##oper, type, size,type22, size22  )\
+} else if (type == "bool") {\
+	_CHECK(a,bool, b,type2, ##oper, type, size,type22, size22  )\
+}\
+
+
+#define _BY_TYPE(a,type1,size1,b,type2,size2, oper)\
+if (type2 == "signed") {\
+	if (size2 == 2) {\
+		_CAST(a,type1, size1, b,int16_t, ##oper, type2, size2   )\
+	} else if (size2 == 4) {\
+		_CAST(a,type1, size1, b,int32_t, ##oper, type2, size2  )\
+	} else if (size2 == 8) {\
+		_CAST(a,type1, size1, b,int64_t, ##oper, type2, size2  )\
+	} else if (size2 == 16) {\
+		_CAST(a,type1, size1, b,int64_t, ##oper, type2, size2  )\
+	}\
+} else if (type2 == "unsigned") {\
+	if (size2 == 2) {\
+		_CAST(a,type1, size1, b,uint16_t, ##oper, type2, size2  )\
+	} else if (size2 == 4) {\
+		_CAST(a,type1, size1, b,uint32_t, ##oper, type2, size2 )\
+	} else if (size2 == 8) {\
+		_CAST(a,type1, size1, b,uint64_t, ##oper, type2, size2 )\
+	} else if (size2 == 16) {\
+		_CAST(a,type1, size1, b,uint64_t, ##oper, type2, size2  )\
+	}\
+} else if (type2 == "float") {\
+	if (size2 == 4) {\
+		_CAST(a,type1, size1, b,float_t, ##oper, type2, size2  )\
+	} else if (size2 == 8) {\
+		_CAST(a,type1, size1, b,double_t, ##oper, type2, size2  )\
+	} else if (size2 == 16) {\
+		_CAST(a,type1, size1, b,double_t, ##oper, type2, size2  )\
+	}\
+} else if (type2 == "char") {\
+	_CAST(a,type1, size1, b,char, ##oper, type2, size2  )\
+} else if (type2 == "bool") {\
+	_CAST(a,type1, size1, b,bool, ##oper, type2, size2  )\
+}\
+
 
 Interpretation::Interpretation(Generation* gen) {
   _preInit();
@@ -102,19 +187,27 @@ void Interpretation::_executeUpCode_CREATE_FIELD_STRUCT           (Generation::_
 }
 
 void Interpretation::_executeUpCode_LOAD_CONST_INT                (Generation::_upCode& upCode, int64_t& index){
-	return;
+	Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+		new Interpretation::VarInfo{ new Generation::TypeInfo("signed", 8), 
+			new int64_t(dynamic_cast<Generation::_paramInt*>(upCode.param)->in) }});
 }
 
 void Interpretation::_executeUpCode_LOAD_CONST_CHAR               (Generation::_upCode& upCode, int64_t& index){
-	return;
+	Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+		new Interpretation::VarInfo{ new Generation::TypeInfo("char", 1),
+			new char(dynamic_cast<Generation::_paramChar*>(upCode.param)->ch) }});
 }
 
 void Interpretation::_executeUpCode_LOAD_CONST_FLOAT              (Generation::_upCode& upCode, int64_t& index){
-	return;
+	Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+		new Interpretation::VarInfo{ new Generation::TypeInfo("float", 8),
+			new double(dynamic_cast<Generation::_paramFloat*>(upCode.param)->fl) }});
 }
 
 void Interpretation::_executeUpCode_LOAD_CONST_STRING             (Generation::_upCode& upCode, int64_t& index){
-	return;
+	Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+		new Interpretation::VarInfo{ new Generation::TypeInfo("string", 0),
+			new std::string(dynamic_cast<Generation::_paramStr*>(upCode.param)->str) }});
 }
 
 void Interpretation::_executeUpCode_LOAD_STRING                   (Generation::_upCode& upCode, int64_t& index){
@@ -166,10 +259,56 @@ void Interpretation::_executeUpCode_UNARY_SUBSTRACTION            (Generation::_
 }
 
 void Interpretation::_executeUpCode_BINARY_ADD                    (Generation::_upCode& upCode, int64_t& index){
+	auto second = _interpretationStackTopWPop();
+	auto first = _interpretationStackTopWPop();
+	auto second1 = second.back();
+	auto first1 = first.back();
+	if (first1->type->points) {
+		int64_t aa = *reinterpret_cast<int64_t*>(first1->value);
+		int64_t bb = *reinterpret_cast<int64_t*>(second1->value);
+		Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+			new Interpretation::VarInfo{ new Generation::TypeInfo("unsigned", 8, first1->type->points, first1->type->baseStep),
+				new int64_t(aa + (bb * (first1->type->points < 2 ? first1->type->baseStep : 8))) }});
+	} else if(second1->type->points) {
+		int64_t aa = *reinterpret_cast<int64_t*>(first1->value);
+		int64_t bb = *reinterpret_cast<int64_t*>(second1->value);
+		Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+			new Interpretation::VarInfo{ new Generation::TypeInfo("unsigned", 8, second1->type->points, second1->type->baseStep),
+				new int64_t(bb + (aa * (second1->type->points < 2 ? second1->type->baseStep : 8))) }});
+	} else if (first1->type->type == "string" && second1->type->type == "string") {
+		std::string aa = *reinterpret_cast<std::string*>(first1->value);
+		std::string bb = *reinterpret_cast<std::string*>(second1->value);
+		Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+			new Interpretation::VarInfo{ new Generation::TypeInfo("string", 0),
+				new std::string(aa + bb) }});
+	} else {
+		_BY_TYPE(first1->value, first1->type->type, first1->type->size,
+			second1->value, second1->type->type, second1->type->size, +);
+	}
 	return;
 }
 
 void Interpretation::_executeUpCode_BINARY_SUBSTRACTION           (Generation::_upCode& upCode, int64_t& index){
+	auto second = _interpretationStackTopWPop();
+	auto first = _interpretationStackTopWPop();
+	auto second1 = second.back();
+	auto first1 = first.back();
+	if (first1->type->points && second1->type->points) {
+		int64_t aa = *reinterpret_cast<int64_t*>(first1->value);
+		int64_t bb = *reinterpret_cast<int64_t*>(second1->value); 
+		Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+			new Interpretation::VarInfo{ new Generation::TypeInfo("unsigned", 8),
+				new int64_t(aa - bb)}});
+	} else if (first1->type->points) {
+		int64_t aa = *reinterpret_cast<int64_t*>(first1->value);
+		int64_t bb = *reinterpret_cast<int64_t*>(second1->value);
+		Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+			new Interpretation::VarInfo{ new Generation::TypeInfo("unsigned", 8),
+				new int64_t(aa - (bb * (first1->type->points < 2 ? first1->type->baseStep : 8))) }});
+	} else {
+		_BY_TYPE(first1->value, first1->type->type, first1->type->size,
+			second1->value, second1->type->type, second1->type->size, -);
+	}
 	return;
 }
 

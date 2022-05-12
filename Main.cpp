@@ -7,6 +7,7 @@ int main(int argc, char** argv) {
 	//std::cout << "//////////////////\n";
   Syntax* syntax = new Syntax(lex);
 	Generation* generation = new Generation(syntax);
+	Interpretation* interp = new Interpretation(generation);
 	std::cout << "good job\n";
  
 }

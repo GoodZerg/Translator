@@ -1,16 +1,5 @@
 
-
-struct fun<f128 b = 10>;
-
-
-ui32 a = 100000;
-fn b(ui32 size)->ui32*{}
-
-ui32 s = (ui32)b(5) + (ui32)malloc(5);
-
-
-fun bb;
-
+string a = "Hello" + " "+ "world!";
 
 
 

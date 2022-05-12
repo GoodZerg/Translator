@@ -14,6 +14,8 @@ public:
     std::string type = "";
     bool isReference = false, isStruct = false;
     TypeInfo(int64_t offset, std::string type);
+    TypeInfo(std::string type, int64_t size);
+    TypeInfo(std::string type, int64_t size, int64_t points, int64_t baseStep);
   };
 
   struct _param {

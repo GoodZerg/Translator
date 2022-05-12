@@ -173,12 +173,12 @@ void Generation::_convertSyntaxNode(Syntax::Exp* elem) {
         }
         break;
       case Type::CHAR:
-        PUSH_UPCODE_CHAR_PARAM(UPCODES::LOAD_STRING, it->lexem[1]);
+        PUSH_UPCODE_CHAR_PARAM(UPCODES::LOAD_CONST_CHAR, it->lexem[1]);
         break;
       case Type::LITERAL:
         tmp.erase(tmp.begin());
         tmp.erase(tmp.end() - 1);
-        PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_STRING, tmp);
+        PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_CONST_STRING, tmp);
         break;
       case Type::OPERATOR:
         if (_operations[tmp] == UPCODES::CALL_FUNCTION) {
@@ -437,5 +437,17 @@ Generation::StructInfo::StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct)
 Generation::TypeInfo::TypeInfo(int64_t offset, std::string type) {
   this->offset = offset;
   this->type = type;
+}
+
+Generation::TypeInfo::TypeInfo(std::string type, int64_t size) {
+  this->type = type;
+  this->baseStep =  this->size = size;
+}
+
+Generation::TypeInfo::TypeInfo(std::string type, int64_t size, int64_t points, int64_t baseStep) {
+  this->type = type;
+  this->size = size;
+  this->points = points;
+  this->baseStep = baseStep;
 }
 

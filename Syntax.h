@@ -206,6 +206,8 @@ public:
   static void _transformToBaseType(std::string* type);
 
   static std::string  _checkNumberType(std::string& type);
+  static std::map<std::string, int64_t> typesCastPriop;
+
 private:
   Lex* lex;
 
@@ -234,7 +236,6 @@ private:
 
   /* semantic */
 
-  static std::map<std::string, int64_t> typesCastPriop;
   
   std::vector<TypeStruct*>  _structsTable   = {};
   std::vector<Variable*>    _variablesTable = {};
