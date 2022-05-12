@@ -81,17 +81,10 @@ std::map<std::string, Generation::StructInfo*> Generation::_structs = {
 
 };
 
-std::map<std::string, int64_t> Generation::_functions = {
-
-};
-
-std::map<std::string, std::vector<Syntax::_parameter*>*> Generation::_functionsDefaultsValue = {
-
-};
-
-std::vector<Generation::_upCode> Generation::_genResult = {
-
-};
+std::map<std::string, int64_t> Generation::_functions = { };
+std::map<std::string, std::vector<Syntax::_parameter*>*> Generation::_functionsDefaultsValue = { };
+std::map<std::string, std::vector<int64_t>> Generation::_functionsDefaultsValueJumpTable = { };
+std::vector<Generation::_upCode> Generation::_genResult = { };
 
 Generation::Generation(Syntax* syntax) {
   _program = syntax->getProgram();
@@ -100,6 +93,13 @@ Generation::Generation(Syntax* syntax) {
   for (auto& elem : _genResult) { 
     std::cout << GetStringUPCODES(elem.code) <<" ";
     PRINT_PARAM(elem.param);
+  }
+
+  for (auto& elem : _functionsDefaultsValueJumpTable) {
+    for (auto& it : elem.second) {
+      std::cout << it << " ";
+    }
+    std::cout << "\n";
   }
 #endif // PRINT_GEN == 1
 
@@ -182,6 +182,9 @@ void Generation::_convertSyntaxNode(Syntax::Exp* elem) {
         PUSH_UPCODE_STRING_PARAM(UPCODES::LOAD_STRING, tmp);
         break;
       case Type::OPERATOR:
+        if (_operations[tmp] == UPCODES::CALL_FUNCTION) {
+          PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, (int64_t)_genResult.size() + 2);
+        }
         PUSH_UPCODE(_operations[tmp]);
         break;
       default:
@@ -311,6 +314,10 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
         }
       }
     }
+
+    _functionsDefaultsValue[*elem->preffix] = parameters;
+    _functionsDefaultsValueJumpTable[*elem->preffix] = std::vector<int64_t>();
+
     for (auto& it : *parameters) {
       auto typeInfo = new TypeInfo(0, it->type->typrStr);
       Syntax::_countAndRemovePoints(&typeInfo->type, typeInfo->points, typeInfo->isReference);
@@ -343,7 +350,9 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
         _convertSyntaxNode(it->exp);
         PUSH_UPCODE(UPCODES::POP);
       }
+      _functionsDefaultsValueJumpTable[*elem->preffix].push_back(_genResult.size());
     }
+    
     _convertSyntaxNode(elem->body);
     // default return value, also in void functions
     PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, 0);
@@ -365,6 +374,8 @@ void Generation::_convertSyntaxNode(Syntax::TReturn* elem) {
     PUSH_UPCODE(UPCODES::SWAP);
     PUSH_UPCODE(UPCODES::END);
   } else {
+    PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, 0);
+    PUSH_UPCODE(UPCODES::SWAP);
     PUSH_UPCODE(UPCODES::END);
   }
 }

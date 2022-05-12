@@ -147,6 +147,23 @@ void ExpParser::_detectAction(Token*& currentToken, Token*& previosToken, std::d
       throw SyntaxError(currentToken, "unexpected operation"); // TODO rename error
     }
   } else {
+    if ((previosToken->lexem == "b*" || previosToken->lexem == "u*" ||
+      previosToken->lexem == "b&" || previosToken->lexem == "u&") &&
+      polis.back()->type == Type::ID && currentToken->lexem == ")") {
+      polis.back()->type = Type::TYPE;
+      while (deque.back()->lexem != "(") {
+        if (deque.back()->lexem[1] == '*') {
+          _addToPolis("*");
+        } else {
+          _addToPolis("&");
+        }
+        deque.pop_back();
+      }
+      deque.pop_back();
+      --_brackets;
+      previosToken = polis.back();
+      _pushToDeque(new Token{ Type::OPERATOR , "cast", 0, 0, nullptr }, deque);
+    }
     _checkErrors(currentToken, previosToken);
     if (currentToken->type == Type::NUMBER || currentToken->type == Type::ID ||
       currentToken->type == Type::LITERAL || currentToken->type == Type::CHAR) {
@@ -172,7 +189,7 @@ void ExpParser::_detectAction(Token*& currentToken, Token*& previosToken, std::d
     } else if (currentToken->lexem == ")") {
       --_brackets;
       if (!(previosToken->type == Type::TYPE)) {
-        _descentToBracket(currentToken, deque);
+        _descentToBracket(currentToken, deque, previosToken);
       }
     } else if (currentToken->lexem == "(") {
       ++_brackets;
@@ -462,9 +479,15 @@ void ExpParser::_descentToIndex(Token* token, std::deque<Token*>& deque) {
   deque.pop_back();
 }
 
-void ExpParser::_descentToBracket(Token* token, std::deque<Token*>& deque) {
+void ExpParser::_descentToBracket(Token* token, std::deque<Token*>& deque, Token*& previosToken) {
   if (deque.back()->lexem == "(") {
     deque.pop_back();
+    /*if (polis.back()->type == Type::ID && previosToken->lexem != "(") {
+      polis.back()->type = Type::TYPE;
+      _pushToDeque(new Token{ Type::OPERATOR , "cast", 0, 0, nullptr }, deque);
+      return;
+    }
+   */
     if (deque.back()->lexem != "fn" && polis.back()->type != Type::TYPE) {
       throw SyntaxError(token, "empty brackets");
     }

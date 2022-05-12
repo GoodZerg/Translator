@@ -57,6 +57,7 @@ private:
 
   static std::map<std::string, int64_t>  _functions;
   static std::map<std::string, std::vector<Syntax::_parameter*>*> _functionsDefaultsValue;
+  static std::map<std::string, std::vector<int64_t>> _functionsDefaultsValueJumpTable;
 
   static std::map<std::string, StructInfo*> _structs;
   static std::vector<_upCode> _genResult;

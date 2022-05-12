@@ -899,12 +899,14 @@ void Syntax::_validatePolis(std::vector<Token*>& exp) {
 					if (elem->lexem == "cast") {
 						firstOp->transformVariableToType(elem);
 						if((firstOp->points == secondOp->points && *secondOp->type == *firstOp->type) || 
-							(firstOp->points != 0 && secondOp->points != 0)){
+							(firstOp->points != 0 && secondOp->points != 0)) {
 							;
-						} if (firstOp->points != 0 && (*secondOp->type == "string" || secondOp->isStruct)) {
+						} else if (firstOp->points != 0 && (*secondOp->type == "string" || secondOp->isStruct)) {
 							throw SemanticError(elem, "try cast pointer");
 						} else if (secondOp->points != 0 && (*firstOp->type == "string" || firstOp->isStruct)) {
 							throw SemanticError(elem, "try cast to pointer");
+						} else if (secondOp->points || firstOp->points) {
+							;
 						} else if (secondOp->isStruct || firstOp->isStruct) {
 							throw SemanticError(elem, "try cast structs");
 						} else if (*firstOp->type == "string" ^ *secondOp->type == "string") {

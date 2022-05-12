@@ -20,7 +20,7 @@ private:
   void _checkUnary(Token* currentToken, Token* previosToken);
   void _checkPrefix(Token* currentToken, Token* previosToken);
   void _descentToIndex(Token* token, std::deque<Token*>& deque);
-  void _descentToBracket(Token* token, std::deque<Token*>& deque);
+  void _descentToBracket(Token* token, std::deque<Token*>& deque, Token*& previosToken);
 
 
   Lex* _lex;
