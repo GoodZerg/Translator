@@ -1,15 +1,66 @@
 #include "Interpretation.h"
 
 
-#define __interpretationStackTopWPop() [&]() -> std::vector<VarInfo*> {\
-auto ahah = _interpretationStack.top();\
-_interpretationStack.pop();\
-return ahah;\
+#define __interpretationStackTopWPop()  \
+[&]() -> std::vector<VarInfo*> {				\
+auto ahah = _interpretationStack.top(); \
+_interpretationStack.pop();							\
+return ahah;														\
 }
 
 #define _interpretationStackTopWPop() __interpretationStackTopWPop()()
 
+#define intType(bits)   int##bits##_t
+#define uintType(bits)  uint##bits##_t
+#define floatType(bits) uint##bits##_t
 
+template <typename T>
+T _cast(void* pointer, int64_t size, std::string type){
+	if (type == "signed") {
+		if (size == 2) {
+			return *reinterpret_cast<int16_t*>(pointer);
+		} else if (size == 4) {
+			return *reinterpret_cast<int32_t*>(pointer);
+		} else if (size == 8) {
+			return *reinterpret_cast<int64_t*>(pointer);
+		} else if (size == 16) {
+			return *reinterpret_cast<int64_t*>(pointer);////
+		}
+	} else if (type == "unsigned") {
+		if (size == 2) {
+			return *reinterpret_cast<uint16_t*>(pointer);
+		} else if (size == 4) {
+			return *reinterpret_cast<uint32_t*>(pointer);
+		} else if (size == 8) {
+			return *reinterpret_cast<uint64_t*>(pointer);
+		} else if (size == 16) {
+			return *reinterpret_cast<uint64_t*>(pointer);////
+		}
+	} else if (type == "float") {
+		if (size == 4) {
+			return *reinterpret_cast<float_t*>(pointer);
+		} else if (size == 8) {
+			return *reinterpret_cast<double_t*>(pointer);
+		} else if (size == 16) {
+			return *reinterpret_cast<double_t*>(pointer);////
+		}
+	} else if (type == "char") {
+		return *reinterpret_cast<char*>(pointer);
+  } else if (type == "string") {
+		return *reinterpret_cast<std::string*>(pointer);
+	} else if (type == "bool") {
+		return *reinterpret_cast<bool*>(pointer);
+	}
+}
+
+
+template <typename T, typename U>
+decltype(auto) plus(T a, U b) {
+	return a + b;
+}
+
+#define BINARY_OPERATIONS(a,oper,b) \
+a##oper##b
 
 Interpretation::Interpretation(Generation* gen) {
   _preInit();
@@ -256,9 +307,12 @@ void Interpretation::_executeUpCode_INIT_VARIABLE_WITHOUT_CREATE  (Generation::_
 
 void Interpretation::_executeUpCode_JUMP_IF_FALSE                 (Generation::_upCode& upCode, int64_t& index){
 	auto first = _interpretationStackTopWPop();
-	// cast to bool
+	bool c = reinterpret_cast<bool>(first.back()->value);
 	for (auto& it : first) {
 		delete it;
+	}
+	if (!c) {
+		index = dynamic_cast<Generation::_paramInt*>(upCode.param)->in;
 	}
 }
 

@@ -87,6 +87,7 @@ private:
   void _startProgram();
   void _executeUpCode(int64_t& upCodeIndex);
 
+
   void _executeUpCode_CREATE_STRUCT                 (Generation::_upCode& upCode, int64_t& index);
   void _executeUpCode_CREATE_FIELD_STRUCT           (Generation::_upCode& upCode, int64_t& index);
   void _executeUpCode_LOAD_CONST_INT                (Generation::_upCode& upCode, int64_t& index);
