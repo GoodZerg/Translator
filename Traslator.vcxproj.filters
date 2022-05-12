@@ -36,6 +36,9 @@
     <ClCompile Include="EnumToString.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="Interpretation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Lex.h">
@@ -57,6 +60,9 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="Upcodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Interpretation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

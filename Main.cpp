@@ -1,4 +1,5 @@
-#include "Generation.h"
+#include "Interpretation.h"
+
 int main(int argc, char** argv) {
 	//puts(argv[0]);
 	//puts(argv[1]);

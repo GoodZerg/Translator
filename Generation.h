@@ -42,9 +42,6 @@ public:
     _param* param;
   };
 
-  struct Variable {
-
-  };
 
   struct StructInfo {
     std::map<std::string, TypeInfo*> fields;
@@ -52,15 +49,22 @@ public:
     StructInfo(int64_t constrAddr, Syntax::TStruct* tstruct);
   };
 
-private:
-  static std::map<std::string, UPCODES> _operations;
+  friend class Interpretation;
 
+protected:
   static std::map<std::string, int64_t>  _functions;
   static std::map<std::string, std::vector<Syntax::_parameter*>*> _functionsDefaultsValue;
   static std::map<std::string, std::vector<int64_t>> _functionsDefaultsValueJumpTable;
 
   static std::map<std::string, StructInfo*> _structs;
   static std::vector<_upCode> _genResult;
+
+  static int64_t _StartProgram;
+
+private:
+  static std::map<std::string, UPCODES> _operations;
+
+  
 
   Syntax::TProgram* _program = nullptr;
 

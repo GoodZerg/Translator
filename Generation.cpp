@@ -77,14 +77,13 @@ std::map<std::string, UPCODES> Generation::_operations = {
   {",",   UPCODES::COMMA}
 };
 
-std::map<std::string, Generation::StructInfo*> Generation::_structs = {
-
-};
-
+std::map<std::string, Generation::StructInfo*> Generation::_structs = { };
 std::map<std::string, int64_t> Generation::_functions = { };
 std::map<std::string, std::vector<Syntax::_parameter*>*> Generation::_functionsDefaultsValue = { };
 std::map<std::string, std::vector<int64_t>> Generation::_functionsDefaultsValueJumpTable = { };
 std::vector<Generation::_upCode> Generation::_genResult = { };
+
+int64_t Generation::_StartProgram = -1;
 
 Generation::Generation(Syntax* syntax) {
   _program = syntax->getProgram();
@@ -288,6 +287,11 @@ void Generation::_convertSyntaxNode(Syntax::TRead* elem) {
 void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
   _functions[*elem->preffix] = elem->body ? _genResult.size() : -1;
   if (elem->body) {
+    PUSH_UPCODE(UPCODES::NOT_PRE_INIT_BLOCK);
+    if (elem->nameFunction->lexem == "main") {
+      PUSH_UPCODE(UPCODES::START_PROGRAM);
+      Generation::_StartProgram = _genResult.size();
+    };
     auto parameters = &elem->parameters;
     if (_functionsDefaultsValue.contains(*elem->preffix)) {
       bool flag = false;
@@ -358,13 +362,16 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
     PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, 0);
     PUSH_UPCODE(UPCODES::SWAP);
     PUSH_UPCODE(UPCODES::END);
+    PUSH_UPCODE(UPCODES::END_NOT_PRE_INIT_BLOCK);
   } else {
     _functionsDefaultsValue[*elem->preffix] = &elem->parameters;
   }
 }
 
 void Generation::_convertSyntaxNode(Syntax::TStruct* elem) {
+  PUSH_UPCODE(UPCODES::NOT_PRE_INIT_BLOCK);
   _structs[elem->name->lexem] = new StructInfo(_genResult.size(), elem);
+  PUSH_UPCODE(UPCODES::END_NOT_PRE_INIT_BLOCK);
   return;
 }
 
@@ -430,3 +437,4 @@ Generation::TypeInfo::TypeInfo(int64_t offset, std::string type) {
   this->offset = offset;
   this->type = type;
 }
+
