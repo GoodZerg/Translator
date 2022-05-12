@@ -28,8 +28,7 @@ void Interpretation::_startProgram() {
 
 void Interpretation::_executeUpCode(int64_t& upCodeIndex) {
 	Generation::_upCode upCode = Generation::_genResult[upCodeIndex];
-	auto a = _executeFunctions[upCode.code]();
-	a(upCode, upCodeIndex);
+	(this->*_executeFunctions[upCode.code])(upCode, upCodeIndex);
 }
 
 void Interpretation::_executeUpCode_CREATE_STRUCT                 (Generation::_upCode& upCode, int64_t& index){
