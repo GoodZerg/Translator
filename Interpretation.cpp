@@ -1,5 +1,16 @@
 #include "Interpretation.h"
 
+
+#define __interpretationStackTopWPop() [&]() -> std::vector<VarInfo*> {\
+auto ahah = _interpretationStack.top();\
+_interpretationStack.pop();\
+return ahah;\
+}
+
+#define _interpretationStackTopWPop() __interpretationStackTopWPop()()
+
+
+
 Interpretation::Interpretation(Generation* gen) {
   _preInit();
 	_startProgram();
@@ -244,27 +255,39 @@ void Interpretation::_executeUpCode_INIT_VARIABLE_WITHOUT_CREATE  (Generation::_
 }
 
 void Interpretation::_executeUpCode_JUMP_IF_FALSE                 (Generation::_upCode& upCode, int64_t& index){
-	return;
+	auto first = _interpretationStackTopWPop();
+	// cast to bool
+	for (auto& it : first) {
+		delete it;
+	}
 }
 
 void Interpretation::_executeUpCode_JUMP                          (Generation::_upCode& upCode, int64_t& index){
-	return;
+	index = dynamic_cast<Generation::_paramInt*>(upCode.param)->in;
 }
 
 void Interpretation::_executeUpCode_DUP                           (Generation::_upCode& upCode, int64_t& index){
-	return;
+	_interpretationStack.push(_interpretationStack.top());
 }
 
 void Interpretation::_executeUpCode_SWAP                          (Generation::_upCode& upCode, int64_t& index){
-	return;
+	auto second = _interpretationStackTopWPop();
+	auto first = _interpretationStackTopWPop();
+	_interpretationStack.push(second);
+	_interpretationStack.push(first);
 }
 
 void Interpretation::_executeUpCode_POP                           (Generation::_upCode& upCode, int64_t& index){
-	return;
+	auto first = _interpretationStackTopWPop();
+	for (auto& it : first) {
+		delete it;
+	}
 }
 
 void Interpretation::_executeUpCode_END                           (Generation::_upCode& upCode, int64_t& index){
-	return;
+	auto first = _interpretationStackTopWPop().back();
+	index = *reinterpret_cast<int64_t*>(first->value);
+	delete first;
 }
 
 void Interpretation::_executeUpCode_START_PROGRAM                 (Generation::_upCode& upCode, int64_t& index){
