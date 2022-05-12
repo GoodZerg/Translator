@@ -97,6 +97,11 @@ const std::vector<Lex::_TypesTemplates> Lex::_typeTemplates = {
    {Type::UNEXPECTED,  R"(.)"}
 };
 
+const std::vector<std::string> Lex::_reservedStrings = {
+  "fn malloc(ui32 size)->void*{}"
+};
+
+
 Lex::Lex(char * input) {
   for (int i = 0; i < _typeTemplates.size(); ++i) {
     _fullRegex += "(" + _typeTemplates[i]._template + ")" + (i == _typeTemplates.size() - 1 ? "" : "|");
@@ -117,6 +122,10 @@ Lex::Lex(char * input) {
   if (!_file.is_open()) {
       std::cout << "CRINGE FILE DRUJE";
       exit(0);
+  }
+
+  for (auto& it : _reservedStrings) {
+    scan(it);
   }
   std::string line = " ";
   while (!_file.eof()) {

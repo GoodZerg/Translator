@@ -1,9 +1,16 @@
 
 
+struct fun<f128 b = 10>;
 
-ui32*** a = (ui32***)5 + 6;
 
-fn ha() ->void {
-	a = (ui32)5 + 6;
+ui32 a = 100000;
+fn b(ui32 size)->ui32*{}
 
-}
+ui32 s = (ui32)b(5) + (ui32)malloc(5);
+
+
+fun bb;
+
+
+
+
