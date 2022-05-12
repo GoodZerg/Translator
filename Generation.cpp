@@ -277,7 +277,8 @@ void Generation::_convertSyntaxNode(Syntax::TForEach* elem) {
 }
 
 void Generation::_convertSyntaxNode(Syntax::TPrint* elem) { 
-  return;
+  _convertSyntaxNode(elem->condition);
+  PUSH_UPCODE(UPCODES::PRINT);
 }
 
 void Generation::_convertSyntaxNode(Syntax::TRead* elem) { 
