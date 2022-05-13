@@ -70,10 +70,11 @@ void Syntax::_parseGeneral() {  // parse lexem to syntax tree
 		}
 	}
   
-	for (auto it : *lex->getTokenStart()) {
+	/*for (auto it : *lex->getTokenStart()) {
 		std::cout << it->lexem << " ";
 	}
 	std::cout << "\n";
+	*/
 }
 
 Syntax::TSingleKeyWord* Syntax::_parseSingleKeyWord() {

@@ -6,8 +6,8 @@
 #include <vector>
 #include <regex>
 
-#define DEBUG 1
-#define PRINT_GEN 1
+#define DEBUG 0
+#define PRINT_GEN 0
 
 #define _getNextToken() lex->getNextToken() == nullptr ? throw( SyntaxError("unexpected end of file")) : (lex->decrementTokenItern(), lex->getNextToken())
 

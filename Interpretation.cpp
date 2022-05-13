@@ -389,7 +389,7 @@ void Interpretation::_executeUpCode_BINARY_ADD                    (Generation::_
 		_BY_TYPE1(first1->value, first1->type->type, first1->type->size,
 			second1->value, second1->type->type, second1->type->size, +);
 	}
-	std::cout << *reinterpret_cast<int32_t*>(_interpretationStack.top().back()->value) << "\n";
+	//std::cout << *reinterpret_cast<int32_t*>(_interpretationStack.top().back()->value) << "\n";
 }
 
 void Interpretation::_executeUpCode_BINARY_SUBSTRACTION           (Generation::_upCode& upCode, int64_t& index){
@@ -413,7 +413,7 @@ void Interpretation::_executeUpCode_BINARY_SUBSTRACTION           (Generation::_
 		_BY_TYPE1(first1->value, first1->type->type, first1->type->size,
 			second1->value, second1->type->type, second1->type->size, -);
 	}
-	std::cout << *reinterpret_cast<int32_t*>(_interpretationStack.top().back()->value) << "\n";
+	//std::cout << *reinterpret_cast<int32_t*>(_interpretationStack.top().back()->value) << "\n";
 }
 
 void Interpretation::_executeUpCode_LOGIC_NOT                     (Generation::_upCode& upCode, int64_t& index){
@@ -525,7 +525,7 @@ void Interpretation::_executeUpCode_ASSIGN                        (Generation::_
 	auto first = _interpretationStackTopWPop();
 	auto second1 = second.back();
 	auto first1 = first.back();
-	std::cout << *reinterpret_cast<int32_t*>(first1->value) << "\n";
+	//std::cout << *reinterpret_cast<int32_t*>(first1->value) << "\n";
 	if (first1->type->points || second1->type->points) {
 		int64_t* aa = reinterpret_cast<int64_t*>(first1->value);
 		int64_t bb = *reinterpret_cast<int64_t*>(second1->value);
@@ -542,7 +542,7 @@ void Interpretation::_executeUpCode_ASSIGN                        (Generation::_
 			second1->value, second1->type->type, second1->type->size, =);
 		_interpretationStack.top().back()->type->isReference = true;
 	}
-	std::cout << *reinterpret_cast<int32_t*>(_interpretationStack.top().back()->value) << "\n";
+	//std::cout << *reinterpret_cast<int32_t*>(_interpretationStack.top().back()->value) << "\n";
 }
 
 void Interpretation::_executeUpCode_COMMA                         (Generation::_upCode& upCode, int64_t& index){
@@ -550,7 +550,44 @@ void Interpretation::_executeUpCode_COMMA                         (Generation::_
 }
 
 void Interpretation::_executeUpCode_PRINT                         (Generation::_upCode& upCode, int64_t& index){
-	return;
+	auto first = _interpretationStackTopWPop();
+	auto type = first.back()->type->type;
+	auto size = first.back()->type->size;
+	if (type == "signed") {
+			if (size == 2) {
+				std::cout << *reinterpret_cast<int16_t*>(first.back()->value) << "\n";
+	} else if (size == 4) {
+		std::cout << *reinterpret_cast<int32_t*>(first.back()->value) << "\n";
+	} else if (size == 8) {
+		std::cout << *reinterpret_cast<int64_t*>(first.back()->value) << "\n";
+	} else if (size == 16) {
+		std::cout << *reinterpret_cast<int64_t*>(first.back()->value) << "\n";
+	}
+} else if (type == "unsigned") {
+	if (size == 2) {
+		std::cout << *reinterpret_cast<uint16_t*>(first.back()->value) << "\n";
+	} else if (size == 4) {
+		std::cout << *reinterpret_cast<uint32_t*>(first.back()->value) << "\n";
+	} else if (size == 8) {
+		std::cout << *reinterpret_cast<uint64_t*>(first.back()->value) << "\n";
+	} else if (size == 16) {
+		std::cout << *reinterpret_cast<uint64_t*>(first.back()->value) << "\n";
+	}
+} else if (type == "float") {
+	if (size == 4) {
+		std::cout << *reinterpret_cast<float_t*>(first.back()->value) << "\n";
+	} else if (size == 8) {
+		std::cout << *reinterpret_cast<double_t*>(first.back()->value) << "\n";
+	} else if (size == 16) {
+		std::cout << *reinterpret_cast<double_t*>(first.back()->value) << "\n";
+	}
+} else if (type == "char") {
+	std::cout << *reinterpret_cast<char*>(first.back()->value) << "\n";
+} else if (type == "bool") {
+	std::cout << *reinterpret_cast<bool*>(first.back()->value) << "\n";
+} else if (type == "string") {
+	std::cout << *reinterpret_cast<std::string*>(first.back()->value) << "\n";
+}
 }
 
 void Interpretation::_executeUpCode_READ                          (Generation::_upCode& upCode, int64_t& index){
@@ -602,6 +639,9 @@ void Interpretation::_executeUpCode_DUP                           (Generation::_
 
 void Interpretation::_executeUpCode_SWAP                          (Generation::_upCode& upCode, int64_t& index){
 	auto second = _interpretationStackTopWPop();
+	if (_interpretationStack.size() == 0) {
+		exit(0);
+	}
 	auto first = _interpretationStackTopWPop();
 	_interpretationStack.push(second);
 	_interpretationStack.push(first);

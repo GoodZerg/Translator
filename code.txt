@@ -5,4 +5,7 @@ ui32 a = 10;
 
 ui32 b = 10000000 + a;
 
+fn main()->void {
+	print("Hello World!");
+}
 
