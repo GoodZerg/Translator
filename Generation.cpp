@@ -357,7 +357,6 @@ void Generation::_convertSyntaxNode(Syntax::TFunction* elem) {
       }
       _functionsDefaultsValueJumpTable[*elem->preffix].push_back(_genResult.size());
     }
-    
     _convertSyntaxNode(elem->body);
     // default return value, also in void functions
     PUSH_UPCODE_INT_PARAM(UPCODES::LOAD_CONST_INT, 0);

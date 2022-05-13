@@ -1,11 +1,27 @@
 
-
+string s1 = "Hello", s2 = "World", s3 = "!";
+fn aa(ui32 a = 11)->void {
+	if (a < 100) {
+		print(a);
+		aa(a + 1);
+	}
+}
 
 ui32 a = 10;
 
 ui32 b = 10000000 + a;
 
-fn main()->void {
-	print("Hello World!");
-}
 
+
+
+fn main()->void {
+	
+	ui32 a = 100;
+	while(a > 0) {
+		
+		print(a);
+		a = a - 1;
+	}
+	aa(70);
+}
+	
