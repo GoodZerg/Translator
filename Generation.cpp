@@ -451,3 +451,20 @@ Generation::TypeInfo::TypeInfo(std::string type, int64_t size, int64_t points, i
   this->baseStep = baseStep;
 }
 
+Generation::TypeInfo::TypeInfo(std::string type, int64_t size, int64_t points, bool isReference) {
+  this->type = type;
+  this->size = size;
+  this->points = points;
+  this->isReference = isReference;
+}
+
+Generation::TypeInfo::TypeInfo(TypeInfo* elem) {
+  this->type = elem->type;
+  this->size = elem->size;
+  this->points = elem->points;
+  this->isReference = elem->isReference;
+  this->isStruct = elem->isStruct;
+  this->baseStep = elem->baseStep;
+  this->offset = elem->offset;
+}
+

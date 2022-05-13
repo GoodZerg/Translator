@@ -58,8 +58,8 @@ template <typename T, typename U>
 decltype(auto) plus(T a, U b) {
 	return a + b;
 }
-		
-#define _CHECK(a,type1,b,type2, oper, type11, size11, type22, size22) \
+
+#define _CHECK1(a,type1,b,type2, oper, type11, size11, type22, size22) \
 type1 aa = *reinterpret_cast<type1 *>(a);\
 type2 bb = *reinterpret_cast<type2 *>(b);\
 auto c = aa oper bb;\
@@ -71,7 +71,98 @@ int64_t sizee = size11;\
 		sizee = size22;\
 	}\
 \
-Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{new Interpretation::VarInfo{new Generation::TypeInfo(typee, sizee), (void*)&c}});\
+auto cc = new char[sizee];\
+memcpy(cc, &c, sizee);\
+Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{new Interpretation::VarInfo{new Generation::TypeInfo(typee, sizee, 0, false), (void*)cc}});\
+\
+
+
+#define _CAST1(a,type,size, b,type2, oper, type22, size22) \
+if (type == "signed") {\
+	if (size == 2) {\
+		_CHECK1(a,int16_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 4) {\
+		_CHECK1(a,int32_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 8) {\
+		_CHECK1(a,int64_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 16) {\
+		_CHECK1(a,int64_t, b,type2, ##oper, type, size,type22, size22  )\
+	}\
+} else if (type == "unsigned") {\
+	if (size == 2) {\
+		_CHECK1(a,uint16_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 4) {\
+		_CHECK1(a,uint32_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 8) {\
+		_CHECK1(a,uint64_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 16) {\
+		_CHECK1(a,uint64_t, b,type2, ##oper, type, size,type22, size22  )\
+	}\
+} else if (type == "float") {\
+	if (size == 4) {\
+		_CHECK1(a,float_t, b,type2, ##oper, type, size,type22, size22  )\
+	} else if (size == 8) {\
+		_CHECK1(a,double_t, b,type2, ##oper, type, size,type22, size22 )\
+	} else if (size == 16) {\
+		_CHECK1(a,double_t, b,type2, ##oper, type, size,type22, size22  )\
+	}\
+} else if (type == "char") {\
+	_CHECK1(a,char, b,type2, ##oper, type, size,type22, size22  )\
+} else if (type == "bool") {\
+	_CHECK1(a,bool, b,type2, ##oper, type, size,type22, size22  )\
+}\
+
+
+#define _BY_TYPE1(a,type1,size1,b,type2,size2, oper)\
+if (type2 == "signed") {\
+	if (size2 == 2) {\
+		_CAST1(a,type1, size1, b,int16_t, ##oper, type2, size2   )\
+	} else if (size2 == 4) {\
+		_CAST1(a,type1, size1, b,int32_t, ##oper, type2, size2  )\
+	} else if (size2 == 8) {\
+		_CAST1(a,type1, size1, b,int64_t, ##oper, type2, size2  )\
+	} else if (size2 == 16) {\
+		_CAST1(a,type1, size1, b,int64_t, ##oper, type2, size2  )\
+	}\
+} else if (type2 == "unsigned") {\
+	if (size2 == 2) {\
+		_CAST1(a,type1, size1, b,uint16_t, ##oper, type2, size2  )\
+	} else if (size2 == 4) {\
+		_CAST1(a,type1, size1, b,uint32_t, ##oper, type2, size2 )\
+	} else if (size2 == 8) {\
+		_CAST1(a,type1, size1, b,uint64_t, ##oper, type2, size2 )\
+	} else if (size2 == 16) {\
+		_CAST1(a,type1, size1, b,uint64_t, ##oper, type2, size2  )\
+	}\
+} else if (type2 == "float") {\
+	if (size2 == 4) {\
+		_CAST1(a,type1, size1, b,float_t, ##oper, type2, size2  )\
+	} else if (size2 == 8) {\
+		_CAST1(a,type1, size1, b,double_t, ##oper, type2, size2  )\
+	} else if (size2 == 16) {\
+		_CAST1(a,type1, size1, b,double_t, ##oper, type2, size2  )\
+	}\
+} else if (type2 == "char") {\
+	_CAST1(a,type1, size1, b,char, ##oper, type2, size2  )\
+} else if (type2 == "bool") {\
+	_CAST1(a,type1, size1, b,bool, ##oper, type2, size2  )\
+}\
+
+
+
+
+#define _CHECK(a,type1,b,type2, oper, type11, size11, type22, size22) \
+type2 bb = *reinterpret_cast<type2 *>(b);\
+*reinterpret_cast<type1 *>(a) oper bb;\
+std::string typee = type11;\
+int64_t sizee = size11;\
+	if (Syntax::typesCastPriop[type11] > Syntax::typesCastPriop[type22]) {\
+			typee = type22;\
+	} else if (Syntax::typesCastPriop[type11] == Syntax::typesCastPriop[type22] && size11 < size22) {\
+		sizee = size22;\
+	}\
+\
+Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{new Interpretation::VarInfo{new Generation::TypeInfo(typee, sizee, 0, false), (void*)a}});\
 \
 
 
@@ -148,6 +239,7 @@ if (type2 == "signed") {\
 
 
 Interpretation::Interpretation(Generation* gen) {
+	_localScopes.push_back(std::map<std::string, VarInfo*>());
   _preInit();
 	_startProgram();
 }
@@ -215,7 +307,19 @@ void Interpretation::_executeUpCode_LOAD_STRING                   (Generation::_
 }
 
 void Interpretation::_executeUpCode_LOAD_NAME                     (Generation::_upCode& upCode, int64_t& index){
-	return;
+	if (_localScopes.back().contains(dynamic_cast<Generation::_paramStr*>(upCode.param)->str)) {
+		auto elem = _localScopes.back()[dynamic_cast<Generation::_paramStr*>(upCode.param)->str];
+		_interpretationStack.push(std::vector<VarInfo*>{
+			new VarInfo{ new Generation::TypeInfo(elem->type),
+			elem->value
+		}});
+	} else {
+		auto elem = _localScopes[0][dynamic_cast<Generation::_paramStr*>(upCode.param)->str];
+		_interpretationStack.push(std::vector<VarInfo*>{
+			new VarInfo{ new Generation::TypeInfo(elem->type),
+			elem->value
+		}});
+	}
 }
 
 void Interpretation::_executeUpCode_CAST                          (Generation::_upCode& upCode, int64_t& index){
@@ -282,10 +386,10 @@ void Interpretation::_executeUpCode_BINARY_ADD                    (Generation::_
 			new Interpretation::VarInfo{ new Generation::TypeInfo("string", 0),
 				new std::string(aa + bb) }});
 	} else {
-		_BY_TYPE(first1->value, first1->type->type, first1->type->size,
+		_BY_TYPE1(first1->value, first1->type->type, first1->type->size,
 			second1->value, second1->type->type, second1->type->size, +);
 	}
-	return;
+	std::cout << *reinterpret_cast<int32_t*>(_interpretationStack.top().back()->value) << "\n";
 }
 
 void Interpretation::_executeUpCode_BINARY_SUBSTRACTION           (Generation::_upCode& upCode, int64_t& index){
@@ -306,10 +410,10 @@ void Interpretation::_executeUpCode_BINARY_SUBSTRACTION           (Generation::_
 			new Interpretation::VarInfo{ new Generation::TypeInfo("unsigned", 8),
 				new int64_t(aa - (bb * (first1->type->points < 2 ? first1->type->baseStep : 8))) }});
 	} else {
-		_BY_TYPE(first1->value, first1->type->type, first1->type->size,
+		_BY_TYPE1(first1->value, first1->type->type, first1->type->size,
 			second1->value, second1->type->type, second1->type->size, -);
 	}
-	return;
+	std::cout << *reinterpret_cast<int32_t*>(_interpretationStack.top().back()->value) << "\n";
 }
 
 void Interpretation::_executeUpCode_LOGIC_NOT                     (Generation::_upCode& upCode, int64_t& index){
@@ -417,7 +521,28 @@ void Interpretation::_executeUpCode_POWER_ASSIGN                  (Generation::_
 }
 
 void Interpretation::_executeUpCode_ASSIGN                        (Generation::_upCode& upCode, int64_t& index){
-	return;
+	auto second = _interpretationStackTopWPop();
+	auto first = _interpretationStackTopWPop();
+	auto second1 = second.back();
+	auto first1 = first.back();
+	std::cout << *reinterpret_cast<int32_t*>(first1->value) << "\n";
+	if (first1->type->points || second1->type->points) {
+		int64_t* aa = reinterpret_cast<int64_t*>(first1->value);
+		int64_t bb = *reinterpret_cast<int64_t*>(second1->value);
+		*aa = bb;
+		_interpretationStack.push(first);
+	} else if (first1->type->type == "string" && second1->type->type == "string") {
+		std::string aa = *reinterpret_cast<std::string*>(first1->value);
+		std::string bb = *reinterpret_cast<std::string*>(second1->value);
+		Interpretation::_interpretationStack.push(std::vector<Interpretation::VarInfo*>{
+			new Interpretation::VarInfo{ new Generation::TypeInfo("string", 0),
+				new std::string(aa + bb) }});
+	} else {
+		_BY_TYPE(first1->value, first1->type->type, first1->type->size,
+			second1->value, second1->type->type, second1->type->size, =);
+		_interpretationStack.top().back()->type->isReference = true;
+	}
+	std::cout << *reinterpret_cast<int32_t*>(_interpretationStack.top().back()->value) << "\n";
 }
 
 void Interpretation::_executeUpCode_COMMA                         (Generation::_upCode& upCode, int64_t& index){
@@ -437,7 +562,19 @@ void Interpretation::_executeUpCode_ASSIGN_BY_ADDRESS             (Generation::_
 }
 
 void Interpretation::_executeUpCode_INIT_VARIABLE                 (Generation::_upCode& upCode, int64_t& index){
-	return;
+	auto IsReference = _interpretationStackTopWPop();
+	auto type = _interpretationStackTopWPop();
+	auto points = _interpretationStackTopWPop();
+	auto size = _interpretationStackTopWPop();
+	_localScopes.back().insert(std::pair{dynamic_cast<Generation::_paramStr*>(upCode.param)->str, 
+		new Interpretation::VarInfo{ 
+		new Generation::TypeInfo(*reinterpret_cast<std::string*>(type.back()->value), 
+														 *reinterpret_cast<int64_t*>(size.back()->value),
+														 *reinterpret_cast<int64_t*>(points.back()->value),
+														 *reinterpret_cast<int64_t*>(IsReference.back()->value)),
+		new char[*reinterpret_cast<int64_t*>(size.back()->value)]}});
+	memset(_localScopes.back()[dynamic_cast<Generation::_paramStr*>(upCode.param)->str]->value, 0,
+		*reinterpret_cast<int64_t*>(size.back()->value));
 }
 
 void Interpretation::_executeUpCode_INIT_VARIABLE_WITHOUT_CREATE  (Generation::_upCode& upCode, int64_t& index){

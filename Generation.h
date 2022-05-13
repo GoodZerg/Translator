@@ -16,6 +16,8 @@ public:
     TypeInfo(int64_t offset, std::string type);
     TypeInfo(std::string type, int64_t size);
     TypeInfo(std::string type, int64_t size, int64_t points, int64_t baseStep);
+    TypeInfo(std::string type, int64_t size, int64_t points, bool isReference);
+    TypeInfo(TypeInfo* elem);
   };
 
   struct _param {
